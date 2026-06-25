@@ -78,19 +78,29 @@ const SYNC = {
     this._realtimeChannel = this.client
       .channel('public-all-changes')
       .on('postgres_changes', { event: '*', schema: 'public' }, async () => {
-        await this.pullAll(false);
-        // 刷新当前页面（不跳转）
-        if (currentUser && currentPage) {
-          destroyCharts();
-          const mc = document.getElementById('main-content');
-          mc.innerHTML = renderPage(currentPage, pageParams);
-          attachPageEvents(currentPage);
-          updateMsgBadge();
-        }
+        await this._refreshPage();
       })
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') showSyncStatus('online');
       });
+
+    // 轮询兜底：每 5 秒拉一次，确保 Realtime 未配置时也能同步
+    setInterval(async () => {
+      if (!this.enabled || !currentUser) return;
+      await this.pullAll();
+      this._refreshPage();
+    }, 5000);
+  },
+
+  async _refreshPage() {
+    await this.pullAll();
+    if (currentUser && currentPage) {
+      destroyCharts();
+      const mc = document.getElementById('main-content');
+      mc.innerHTML = renderPage(currentPage, pageParams);
+      attachPageEvents(currentPage);
+      updateMsgBadge();
+    }
   }
 };
 
