@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>吉林大学宿舍报修系统</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<!-- Login overlay -->
+<div id="login-page"></div>
+
+<!-- App shell (shown after login) -->
+<div id="app-shell" class="hidden">
+  <nav id="top-nav">
+    <div class="top-nav-left">
+      <button id="sidebar-toggle" class="icon-btn">☰</button>
+      <span class="system-title">吉林大学宿舍报修系统</span>
+    </div>
+    <div class="top-nav-right">
+      <span id="nav-user-info"></span>
+      <button id="btn-switch-role" class="nav-btn">切换身份</button>
+      <button id="btn-msg" class="icon-btn nav-msg-btn">
+        🔔<span id="msg-badge" class="msg-badge hidden">0</span>
+      </button>
+      <button id="btn-logout" class="nav-btn nav-btn-ghost">退出</button>
+    </div>
+  </nav>
+  <div class="app-body">
+    <aside id="side-nav"></aside>
+    <main id="main-content"></main>
+  </div>
+</div>
+
+<!-- Modal overlay -->
+<div id="modal-overlay" class="hidden">
+  <div id="modal-box">
+    <div id="modal-header">
+      <span id="modal-title"></span>
+      <button id="modal-close" class="icon-btn">✕</button>
+    </div>
+    <div id="modal-body"></div>
+    <div id="modal-footer"></div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+<!-- Role switcher overlay -->
+<div id="role-switcher" class="hidden">
+  <div class="role-switcher-box">
+    <div class="role-switcher-title">切换身份</div>
+    <div id="role-switcher-list"></div>
+    <button id="role-switcher-close" class="btn btn-ghost mt-2">取消</button>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
