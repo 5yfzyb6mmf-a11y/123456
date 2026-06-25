@@ -94,13 +94,19 @@ const SYNC = {
 
   async _refreshPage() {
     await this.pullAll();
-    if (currentUser && currentPage) {
-      destroyCharts();
-      const mc = document.getElementById('main-content');
-      mc.innerHTML = renderPage(currentPage, pageParams);
-      attachPageEvents(currentPage);
-      updateMsgBadge();
-    }
+    if (!currentUser || !currentPage) return;
+    // 表单页面不自动刷新，避免打断用户输入
+    const FORM_PAGES = [
+      'student-submit', 'student-evaluate', 'student-complaint',
+      'dorm-register', 'repairman-record', 'repairman-schedule',
+      'admin-notice'
+    ];
+    if (FORM_PAGES.includes(currentPage)) return;
+    destroyCharts();
+    const mc = document.getElementById('main-content');
+    mc.innerHTML = renderPage(currentPage, pageParams);
+    attachPageEvents(currentPage);
+    updateMsgBadge();
   }
 };
 
