@@ -1,0 +1,1814 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>吉林大学宿舍报修系统 - 移动端原型</title>
+<style>
+:root{
+  --primary:#2F6FED;
+  --primary-dark:#1E54C4;
+  --primary-light:#E8F0FE;
+  --success:#1FAA59;
+  --success-light:#E6F7ED;
+  --warning:#F5A623;
+  --warning-light:#FEF3E0;
+  --danger:#E5484D;
+  --danger-light:#FCEAEA;
+  --info:#7C5CFC;
+  --info-light:#EFEAFE;
+  --bg:#F2F4F7;
+  --card:#FFFFFF;
+  --text:#1F2430;
+  --text-secondary:#6B7280;
+  --text-tertiary:#9AA1AC;
+  --border:#E8EAED;
+  --radius:14px;
+  --radius-sm:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  background:#D9DEE6;
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+  padding:30px 12px;
+  min-height:100vh;
+  color:var(--text);
+}
+/* ============ 外层信息 ============ */
+.page-wrap{display:flex;flex-direction:column;align-items:center;gap:14px;}
+.credit{
+  font-size:12px;color:#6B7280;text-align:center;line-height:1.6;
+  background:rgba(255,255,255,.6);padding:6px 14px;border-radius:20px;
+}
+/* ============ 手机框（深色机身 + 内屏 两层结构） ============ */
+.phone{
+  width:414px;
+  height:844px;
+  background:linear-gradient(165deg,#3a3d44,#16171a 55%);
+  border-radius:58px;
+  box-shadow:
+    0 28px 64px rgba(20,30,50,.35),
+    0 0 0 1.5px rgba(255,255,255,.08) inset,
+    0 0 0 7px rgba(0,0,0,.35) inset;
+  position:relative;
+  padding:12px;
+}
+/* 电源键（右侧） */
+.phone::before{
+  content:'';position:absolute;right:-3px;top:198px;width:3px;height:78px;
+  background:#1b1c1f;border-radius:2px 0 0 2px;
+  box-shadow:-1px 0 0 rgba(255,255,255,.06) inset;
+}
+/* 音量键（左侧，上下两段） */
+.phone::after{
+  content:'';position:absolute;left:-3px;top:152px;width:3px;height:46px;
+  background:#1b1c1f;border-radius:0 2px 2px 0;
+  box-shadow:1px 0 0 rgba(255,255,255,.06) inset;
+}
+.phone-mute{
+  position:absolute;left:-3px;top:118px;width:3px;height:24px;
+  background:#1b1c1f;border-radius:0 2px 2px 0;z-index:1;
+}
+.phone-vol2{
+  position:absolute;left:-3px;top:208px;width:3px;height:46px;
+  background:#1b1c1f;border-radius:0 2px 2px 0;z-index:1;
+}
+.phone-screen{
+  width:100%;height:100%;
+  background:var(--bg);
+  border-radius:46px;
+  overflow:hidden;
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  box-shadow:0 0 0 2px rgba(0,0,0,.5);
+}
+.notch{
+  position:absolute;top:13px;left:50%;transform:translateX(-50%);
+  width:116px;height:32px;background:#0b0c10;border-radius:100px;
+  z-index:50;
+  box-shadow:0 0 0 1px rgba(255,255,255,.04) inset;
+}
+.statusbar{
+  height:50px;flex:0 0 50px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 28px;font-size:14px;font-weight:600;color:var(--text);background:transparent;z-index:40;
+}
+.statusbar .icons{display:flex;align-items:center;gap:5px;}
+.screens{flex:1;position:relative;overflow:hidden;}
+.screen{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  background:var(--bg);
+  transform:translateX(100%);
+  transition:transform .26s ease;
+  z-index:1;
+}
+.screen.active{transform:translateX(0);z-index:5;}
+.screen.under{transform:translateX(-30%);z-index:2;}
+.screen-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.screen-scroll::-webkit-scrollbar{display:none;}
+
+/* ============ 顶部导航 ============ */
+.topnav{
+  flex:0 0 50px;display:flex;align-items:center;padding:0 6px;position:relative;
+  background:var(--bg);
+}
+.topnav .nav-btn{
+  width:38px;height:38px;display:flex;align-items:center;justify-content:center;cursor:pointer;
+  color:var(--text);flex:0 0 38px;
+}
+.topnav .nav-title{
+  position:absolute;left:0;right:0;text-align:center;font-size:17px;font-weight:600;pointer-events:none;
+}
+.topnav .nav-right{flex:0 0 38px;display:flex;align-items:center;justify-content:flex-end;padding-right:4px;}
+.topnav .nav-right-text{font-size:13px;color:var(--primary);font-weight:500;cursor:pointer;white-space:nowrap;}
+
+/* ============ 通用卡片 ============ */
+.card{
+  background:var(--card);border-radius:var(--radius);padding:16px;
+  box-shadow:0 1px 2px rgba(20,30,50,.04);
+}
+.section{padding:14px 16px;}
+.section-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;}
+.section-title .more{font-size:12px;color:var(--text-tertiary);font-weight:400;cursor:pointer;}
+
+/* ============ 按钮 ============ */
+.btn{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  height:46px;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;
+  border:none;width:100%;transition:transform .08s, opacity .15s;
+  -webkit-tap-highlight-color:transparent;
+}
+.btn:active{transform:scale(.98);}
+.btn-primary{background:var(--primary);color:#fff;}
+.btn-primary:disabled{background:#B9CCF4;cursor:not-allowed;}
+.btn-outline{background:#fff;color:var(--primary);border:1px solid var(--primary);}
+.btn-danger-outline{background:#fff;color:var(--danger);border:1px solid var(--danger);}
+.btn-ghost{background:var(--bg);color:var(--text);}
+.btn-sm{height:36px;font-size:13px;border-radius:10px;}
+.btn-row{display:flex;gap:10px;}
+
+/* ============ 表单 ============ */
+.field-label{font-size:13px;color:var(--text-secondary);margin-bottom:8px;font-weight:500;}
+.field-label .req{color:var(--danger);margin-left:2px;}
+textarea, input[type=text], input[type=datetime-local], input[type=password]{
+  width:100%;border:1px solid var(--border);border-radius:10px;padding:11px 12px;
+  font-size:14px;font-family:inherit;color:var(--text);background:#fff;
+}
+textarea{resize:none;min-height:90px;line-height:1.5;}
+input::placeholder, textarea::placeholder{color:var(--text-tertiary);}
+textarea:focus, input:focus{outline:none;border-color:var(--primary);}
+
+.chip-grid{display:flex;flex-wrap:wrap;gap:8px;}
+.chip{
+  padding:9px 14px;border-radius:10px;background:#fff;border:1px solid var(--border);
+  font-size:13.5px;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:5px;
+  -webkit-tap-highlight-color:transparent;
+}
+.chip.selected{background:var(--primary-light);border-color:var(--primary);color:var(--primary-dark);font-weight:600;}
+
+.type-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.type-item{
+  display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 0;border-radius:12px;
+  cursor:pointer;border:1.5px solid transparent;-webkit-tap-highlight-color:transparent;
+}
+.type-item.selected{background:var(--primary-light);border-color:var(--primary);}
+.type-item .ic{
+  width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  background:var(--bg);
+}
+.type-item.selected .ic{background:#fff;}
+.type-item span{font-size:12px;color:var(--text-secondary);}
+.type-item.selected span{color:var(--primary-dark);font-weight:600;}
+
+.switch-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0;}
+.switch{width:46px;height:26px;border-radius:13px;background:var(--border);position:relative;cursor:pointer;transition:background .2s;flex:0 0 46px;}
+.switch.on{background:var(--primary);}
+.switch .knob{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .2s;}
+.switch.on .knob{left:23px;}
+
+/* ============ 图片上传 ============ */
+.upload-grid{display:flex;flex-wrap:wrap;gap:10px;}
+.upload-tile{
+  width:72px;height:72px;border-radius:10px;position:relative;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;
+}
+.upload-tile .del{
+  position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;
+  background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;cursor:pointer;
+}
+.upload-add{
+  width:72px;height:72px;border-radius:10px;border:1.5px dashed var(--border);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  color:var(--text-tertiary);font-size:11px;cursor:pointer;background:#fbfbfc;
+}
+
+/* ============ 状态标签 ============ */
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:7px;white-space:nowrap;}
+.badge-pending{background:var(--warning-light);color:#B5740E;}
+.badge-assigned{background:var(--info-light);color:#5B3FD6;}
+.badge-repairing{background:var(--primary-light);color:var(--primary-dark);}
+.badge-evaluate{background:#E0F7F4;color:#0E8A78;}
+.badge-completed{background:var(--success-light);color:#16834A;}
+.badge-cancelled{background:#EEF0F2;color:#7A828E;}
+.badge-rejected{background:var(--danger-light);color:#C23337;}
+
+/* ============ 工单列表卡片 ============ */
+.ticket-card{background:#fff;border-radius:var(--radius);padding:14px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.ticket-card:active{background:#FAFBFC;}
+.ticket-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;}
+.ticket-type{display:flex;align-items:center;gap:8px;}
+.ticket-type .ic{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex:0 0 34px;}
+.ticket-id{font-size:11.5px;color:var(--text-tertiary);}
+.ticket-desc{font-size:13px;color:var(--text-secondary);line-height:1.5;margin:6px 0 8px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.ticket-meta{display:flex;align-items:center;justify-content:space-between;font-size:11.5px;color:var(--text-tertiary);}
+
+/* ============ 分段控件 / tabs ============ */
+.segment{display:flex;background:#fff;border-radius:11px;padding:3px;gap:2px;}
+.segment .seg-item{flex:1;text-align:center;padding:8px 4px;font-size:12.5px;border-radius:9px;color:var(--text-secondary);cursor:pointer;font-weight:500;white-space:nowrap;}
+.segment .seg-item.active{background:var(--primary);color:#fff;font-weight:600;}
+.tab-underline{display:flex;border-bottom:1px solid var(--border);background:#fff;}
+.tab-underline .tu-item{flex:1;text-align:center;padding:13px 0;font-size:14px;color:var(--text-secondary);position:relative;cursor:pointer;font-weight:500;}
+.tab-underline .tu-item.active{color:var(--primary);font-weight:700;}
+.tab-underline .tu-item.active::after{content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:28px;height:3px;background:var(--primary);border-radius:3px;}
+
+/* ============ 时间线 ============ */
+.timeline{padding-left:6px;}
+.tl-item{display:flex;gap:12px;position:relative;padding-bottom:22px;}
+.tl-item:last-child{padding-bottom:0;}
+.tl-dot-col{display:flex;flex-direction:column;align-items:center;flex:0 0 22px;}
+.tl-dot{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--border);color:#fff;flex:0 0 22px;}
+.tl-dot.done{background:var(--success);}
+.tl-dot.now{background:var(--primary);box-shadow:0 0 0 4px var(--primary-light);}
+.tl-dot.fail{background:var(--danger);}
+.tl-line{width:2px;flex:1;background:var(--border);margin-top:2px;}
+.tl-line.done{background:var(--success);}
+.tl-body{flex:1;padding-top:1px;}
+.tl-title{font-size:14px;font-weight:600;color:var(--text);}
+.tl-title.muted{color:var(--text-tertiary);font-weight:500;}
+.tl-sub{font-size:12.5px;color:var(--text-tertiary);margin-top:3px;line-height:1.5;}
+
+/* ============ 星级评分 ============ */
+.star-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;}
+.star-row .star-label{font-size:14px;color:var(--text);font-weight:500;}
+.stars{display:flex;gap:4px;}
+.star{width:26px;height:26px;cursor:pointer;}
+
+/* ============ 列表行 ============ */
+.list-row{display:flex;align-items:center;justify-content:space-between;background:#fff;padding:14px 16px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.list-row:active{background:#FAFBFC;}
+.list-row + .list-row{border-top:1px solid var(--border);}
+.list-row .lr-left{display:flex;align-items:center;gap:11px;}
+.lr-text{font-size:14.5px;color:var(--text);}
+.lr-sub{font-size:12px;color:var(--text-tertiary);margin-top:2px;}
+.lr-chevron{color:var(--text-tertiary);}
+
+/* ============ 消息行 ============ */
+.msg-row{display:flex;gap:11px;padding:14px 16px;background:#fff;cursor:pointer;position:relative;-webkit-tap-highlight-color:transparent;}
+.msg-row:active{background:#FAFBFC;}
+.msg-row + .msg-row{border-top:1px solid var(--border);}
+.msg-icon{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:0 0 38px;}
+.msg-body{flex:1;min-width:0;}
+.msg-top{display:flex;align-items:center;justify-content:space-between;}
+.msg-title{font-size:14px;font-weight:600;color:var(--text);}
+.msg-time{font-size:11.5px;color:var(--text-tertiary);}
+.msg-content{font-size:12.5px;color:var(--text-secondary);margin-top:3px;line-height:1.5;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.unread-dot{width:8px;height:8px;border-radius:50%;background:var(--danger);position:absolute;top:16px;left:8px;}
+
+/* ============ 首页专属 ============ */
+.home-header{padding:18px 16px 4px;}
+.greet{font-size:20px;font-weight:700;color:var(--text);}
+.dorm-chip{display:inline-flex;align-items:center;gap:5px;margin-top:6px;font-size:12.5px;color:var(--text-secondary);background:#fff;padding:5px 10px;border-radius:8px;}
+.cta-repair{
+  margin:14px 16px 0;border-radius:18px;padding:20px;
+  background:linear-gradient(135deg,#2F6FED,#5B8DF8);color:#fff;position:relative;overflow:hidden;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.cta-repair::after{content:'';position:absolute;right:-30px;top:-30px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.10);}
+.cta-repair .cta-title{font-size:17px;font-weight:700;display:flex;align-items:center;gap:8px;}
+.cta-repair .cta-sub{font-size:12.5px;opacity:.88;margin-top:5px;}
+.cta-repair .cta-arrow{position:absolute;right:18px;top:50%;transform:translateY(-50%);}
+
+.active-ticket{margin:14px 16px 0;}
+.notice-strip{
+  margin:0 16px;background:var(--warning-light);border-radius:10px;padding:10px 12px;
+  display:flex;align-items:center;gap:8px;font-size:12.5px;color:#8A5A0A;cursor:pointer;
+}
+
+.bottom-tabbar{
+  flex:0 0 64px;display:flex;background:#fff;border-top:1px solid var(--border);
+  padding-bottom:8px;
+}
+.tab-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  color:var(--text-tertiary);cursor:pointer;position:relative;-webkit-tap-highlight-color:transparent;padding-top:6px;}
+.tab-btn.active{color:var(--primary);}
+.tab-btn span{font-size:11px;font-weight:500;}
+.tab-badge{position:absolute;top:2px;right:calc(50% - 17px);background:var(--danger);color:#fff;font-size:10px;
+  font-weight:700;min-width:16px;height:16px;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 4px;}
+
+/* ============ 空状态 ============ */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:70px 30px;text-align:center;color:var(--text-tertiary);}
+.empty-state .es-title{font-size:14px;color:var(--text-secondary);margin-top:14px;font-weight:500;}
+.empty-state .es-sub{font-size:12.5px;margin-top:6px;line-height:1.6;}
+
+/* ============ Toast / Modal ============ */
+.toast{
+  position:absolute;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:rgba(30,32,38,.92);color:#fff;font-size:13px;padding:10px 18px;border-radius:30px;
+  z-index:100;opacity:0;pointer-events:none;transition:opacity .2s, transform .2s;white-space:nowrap;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.modal-overlay{
+  position:absolute;inset:0;background:rgba(15,18,25,.45);z-index:90;display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .2s;
+}
+.modal-overlay.show{opacity:1;pointer-events:auto;}
+.modal-box{width:280px;background:#fff;border-radius:16px;padding:22px 20px 16px;text-align:center;}
+.modal-title{font-size:16px;font-weight:700;color:var(--text);}
+.modal-msg{font-size:13.5px;color:var(--text-secondary);margin-top:10px;line-height:1.6;}
+.modal-btns{display:flex;gap:10px;margin-top:18px;}
+
+/* ============ 登录页 ============ */
+.login-screen{justify-content:flex-start;}
+.login-top{padding:64px 30px 24px;display:flex;flex-direction:column;align-items:center;}
+.login-badge{width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,#2F6FED,#5B8DF8);display:flex;align-items:center;justify-content:center;margin-bottom:16px;}
+.login-title{font-size:20px;font-weight:700;color:var(--text);}
+.login-sub{font-size:12.5px;color:var(--text-tertiary);margin-top:5px;}
+.login-form{padding:6px 28px;display:flex;flex-direction:column;gap:14px;}
+.login-form label{font-size:12.5px;color:var(--text-secondary);margin-bottom:6px;display:block;font-weight:500;}
+
+/* 个人中心 */
+.profile-header{padding:26px 20px 18px;display:flex;align-items:center;gap:14px;background:#fff;}
+.avatar{width:58px;height:58px;border-radius:50%;background:var(--primary);color:#fff;font-size:22px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:0 0 58px;}
+.profile-name{font-size:17px;font-weight:700;color:var(--text);}
+.profile-sub{font-size:12.5px;color:var(--text-tertiary);margin-top:3px;}
+
+.info-card-row{display:flex;justify-content:space-between;padding:8px 0;font-size:13px;}
+.info-card-row .k{color:var(--text-tertiary);}
+.info-card-row .v{color:var(--text);font-weight:500;}
+
+hr.div{border:none;border-top:1px solid var(--border);margin:0;}
+.repair-photo{width:64px;height:64px;border-radius:9px;object-fit:cover;}
+.repair-photo-mock{width:64px;height:64px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;}
+
+/* ============ 角色选择登录卡 ============ */
+.role-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.role-card{
+  background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:16px 10px;
+  display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;text-align:center;
+  -webkit-tap-highlight-color:transparent;
+}
+.role-card.selected{border-color:var(--primary);background:var(--primary-light);}
+.role-card .rc-ic{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--bg);color:var(--primary);}
+.role-card.selected .rc-ic{background:#fff;}
+.role-card .rc-name{font-size:13.5px;font-weight:700;color:var(--text);}
+.role-card .rc-desc{font-size:10.5px;color:var(--text-tertiary);line-height:1.4;}
+
+/* ============ 统计卡（总览类页面） ============ */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.stat-card{background:#fff;border-radius:var(--radius);padding:14px;}
+.stat-card .stat-label{font-size:12px;color:var(--text-tertiary);}
+.stat-card .stat-value{font-size:24px;font-weight:700;margin-top:4px;}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.bar-row .bar-label{font-size:12.5px;color:var(--text-secondary);width:42px;flex:0 0 42px;}
+.bar-track{flex:1;height:8px;background:var(--bg);border-radius:5px;overflow:hidden;}
+.bar-fill{height:100%;background:var(--primary);border-radius:5px;}
+.bar-row .bar-count{font-size:11.5px;color:var(--text-tertiary);flex:0 0 36px;text-align:right;}
+
+/* ============ 派单候选人卡 ============ */
+.cand-row{background:#fff;border-radius:12px;padding:12px;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px;border:1.5px solid transparent;}
+.cand-row.rec{border-color:var(--primary);background:var(--primary-light);}
+.cand-name{font-size:14px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.cand-tag{font-size:10.5px;background:var(--bg);color:var(--text-secondary);padding:2px 7px;border-radius:6px;font-weight:500;}
+.cand-rec-tag{font-size:10.5px;background:var(--primary);color:#fff;padding:2px 7px;border-radius:6px;font-weight:600;display:inline-flex;align-items:center;gap:2px;}
+.cand-meta{font-size:11.5px;color:var(--text-tertiary);margin-top:4px;}
+
+/* ============ 耗材编辑行 ============ */
+.mat-row{display:flex;gap:8px;margin-bottom:8px;align-items:center;}
+.mat-row input{flex:1;}
+.mat-row input.mat-qty{flex:0 0 56px;text-align:center;padding:11px 4px;}
+.mat-row .mat-del{width:36px;height:36px;flex:0 0 36px;border-radius:9px;background:var(--danger-light);color:var(--danger);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;font-weight:700;}
+
+/* ============ 简易只读人员行 ============ */
+.staff-row{display:flex;align-items:center;justify-content:space-between;background:#fff;padding:13px 14px;border-radius:12px;margin-bottom:9px;}
+.staff-row .sr-name{font-size:14px;font-weight:600;color:var(--text);}
+.staff-row .sr-sub{font-size:11.5px;color:var(--text-tertiary);margin-top:3px;}
+.staff-row .sr-score{font-size:13px;font-weight:700;color:var(--warning);}
+
+/* ============ 段内分段（投诉/公告 二级切换）============ */
+.mini-seg{display:flex;gap:8px;margin-bottom:12px;}
+.mini-seg .ms-item{flex:1;text-align:center;padding:9px 0;border-radius:10px;background:#fff;font-size:13px;color:var(--text-secondary);font-weight:600;cursor:pointer;border:1.5px solid var(--border);}
+.mini-seg .ms-item.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+
+</style>
+</head>
+<body>
+<div class="page-wrap">
+  <div class="phone" id="phone">
+    <div class="phone-mute"></div>
+    <div class="phone-vol2"></div>
+    <div class="phone-screen">
+      <div class="notch"></div>
+      <div class="statusbar">
+        <span id="clock">9:41</span>
+        <div class="icons">
+          <svg width="16" height="11" viewBox="0 0 16 11" fill="none"><rect x="0" y="6" width="2.4" height="5" rx="0.6" fill="currentColor"/><rect x="4" y="4" width="2.4" height="7" rx="0.6" fill="currentColor"/><rect x="8" y="2" width="2.4" height="9" rx="0.6" fill="currentColor"/><rect x="12" y="0" width="2.4" height="11" rx="0.6" fill="currentColor"/></svg>
+          <svg width="16" height="11" viewBox="0 0 16 11" fill="none"><path d="M8 9.5C5.5 9.5 3.5 8.4 2 6.7L2.9 5.7C4.2 7.1 6 8 8 8C10 8 11.8 7.1 13.1 5.7L14 6.7C12.5 8.4 10.5 9.5 8 9.5Z" fill="currentColor"/><path d="M8 5.8C6.6 5.8 5.3 5.2 4.4 4.2L5.3 3.2C6 4 7 4.5 8 4.5C9 4.5 10 4 10.7 3.2L11.6 4.2C10.7 5.2 9.4 5.8 8 5.8Z" fill="currentColor"/><circle cx="8" cy="2.2" r="1.2" fill="currentColor"/></svg>
+          <svg width="24" height="11" viewBox="0 0 24 11" fill="none"><rect x="0.5" y="0.5" width="20" height="10" rx="2.5" stroke="currentColor"/><rect x="2" y="2" width="15" height="7" rx="1.2" fill="currentColor"/><rect x="21.5" y="3.5" width="1.6" height="4" rx="0.8" fill="currentColor"/></svg>
+        </div>
+      </div>
+
+      <div class="screens" id="screens"></div>
+
+      <div class="bottom-tabbar" id="bottomTabbar"></div>
+
+      <div class="modal-overlay" id="modalOverlay"></div>
+      <div class="toast" id="toast"></div>
+    </div>
+  </div>
+  <div class="credit">吉林大学宿舍报修系统 · 移动端高保真原型（学生 / 宿舍管理员 / 维修人员 / 系统管理员 四角色）<br>5组：组长 薛楚滢 35241509 · 组员 侯博文 黄治桦 比努尔·阿曼太</div>
+</div>
+
+<script>
+/* ============================================================
+   吉林大学宿舍报修系统 · 移动端高保真原型
+   数据模型与字段命名严格对齐网页端 app.js（同一套用例/状态机），
+   保证两端演示时数据口径一致。账号、工单等均为课程演示数据。
+   ============================================================ */
+
+/* ---------------- 图标库 ---------------- */
+const ICON = {
+  back: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>`,
+  plus: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>`,
+  bolt: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/></svg>`,
+  sofa: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11V8a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v3"/><path d="M3 11h18v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M5 17v3M19 17v3"/></svg>`,
+  window: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="1.5"/><path d="M12 4v16M3 12h18"/></svg>`,
+  shower: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 16 0"/><path d="M4 12h16M7 16v2M11 16v3M15 16v2"/></svg>`,
+  wifi: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5a10 10 0 0 1 14 0"/><path d="M8.5 16a5 5 0 0 1 7 0"/><circle cx="12" cy="19.5" r="1" fill="currentColor" stroke="none"/></svg>`,
+  snow: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M4.2 6.5l15.6 11M4.2 17.5l15.6-11"/></svg>`,
+  more: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.6" fill="currentColor" stroke="none"/></svg>`,
+  camera: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h2l1.2-1.6A2 2 0 0 1 10.8 3.6h2.4a2 2 0 0 1 1.6.8L16 6h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="3.3"/></svg>`,
+  clock: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>`,
+  pin: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s7-7.4 7-12a7 7 0 0 0-14 0c0 4.6 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></svg>`,
+  check: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>`,
+  x: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>`,
+  chevron: `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>`,
+  phone: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.6 10.8a14 14 0 0 0 6.6 6.6l2.2-2.2a1.3 1.3 0 0 1 1.3-.3 11 11 0 0 0 3.4.5 1.3 1.3 0 0 1 1.3 1.3V20a1.3 1.3 0 0 1-1.3 1.3C10.5 21.3 2.7 13.5 2.7 4.3A1.3 1.3 0 0 1 4 3h3.6a1.3 1.3 0 0 1 1.3 1.3 11 11 0 0 0 .5 3.4 1.3 1.3 0 0 1-.3 1.3z"/></svg>`,
+  star_o: `<svg viewBox="0 0 24 24" fill="none" stroke="#C7CCD4" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3.5l2.6 5.4 5.9.7-4.3 4.2 1 5.9L12 16.8l-5.2 2.9 1-5.9L3.5 9.6l5.9-.7z"/></svg>`,
+  star_f: `<svg viewBox="0 0 24 24" fill="#F5A623" stroke="#F5A623" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3.5l2.6 5.4 5.9.7-4.3 4.2 1 5.9L12 16.8l-5.2 2.9 1-5.9L3.5 9.6l5.9-.7z"/></svg>`,
+  bell_fill: `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M18 16v-5a6 6 0 1 0-12 0v5l-2 2v1h16v-1z"/><path d="M9.5 20a2.5 2.5 0 0 0 5 0z"/></svg>`,
+  notice_fill: `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M3 11v2l3 .5V17a2 2 0 0 0 2 2h1l-1-5.2L3 11z"/><path d="M21 4 6 9v6l15 5z"/></svg>`,
+  reply_fill: `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M4 4h16v11H8l-4 4z"/></svg>`,
+  wrench_fill: `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M21 7.4 16.6 3a3.4 3.4 0 0 0-4.7 4.7l-8 8a2 2 0 1 0 2.8 2.8l8-8A3.4 3.4 0 0 0 21 7.4z"/></svg>`,
+  doc: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>`,
+  feedback: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.4 8.7 8.7 0 0 1-3.7-.8L3 20l1-5.5a8.4 8.4 0 0 1-.5-2.9A8.4 8.4 0 0 1 12 3a8.4 8.4 0 0 1 9 8.5z"/></svg>`,
+  about: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v.01M11 12h1v5h1"/></svg>`,
+  logout: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>`,
+  building: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M6 21V8l6-4 6 4v13M9 21v-5h6v5"/></svg>`,
+  cancel_circ: `<svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="1.6"><circle cx="12" cy="12" r="9.5"/><path d="M8.5 8.5l7 7M15.5 8.5l-7 7" stroke-width="1.8" stroke-linecap="round"/></svg>`,
+  home: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>`,
+  list: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>`,
+  bell_o: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>`,
+  user_o: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>`,
+  grid: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg>`,
+  clip_check: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6a1 1 0 0 1 1 1v1H8V5a1 1 0 0 1 1-1z"/><rect x="5" y="5" width="14" height="16" rx="2"/><path d="M9 13l2 2 4-4"/></svg>`,
+  calendar: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>`,
+  send: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4z"/></svg>`,
+  work_o: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18"/></svg>`,
+  people_o: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.4 3-5.2 6.5-5.2s6.5 1.8 6.5 5.2"/><circle cx="17.5" cy="9" r="2.5"/><path d="M16 14.3c2.6.3 4.5 1.8 4.5 4.4"/></svg>`,
+  sparkle: `<svg width="13" height="13" viewBox="0 0 24 24" fill="#fff" stroke="none"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>`,
+  megaphone_o: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10v4l3 .6V16a2 2 0 0 0 2 2h1l-1-5.4L3 10z"/><path d="M21 3 6 8v8l15 5z"/></svg>`,
+  role_student: `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 8l10 5 10-5z"/><path d="M6 10.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-5.5"/></svg>`,
+  role_dorm: `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V10l7-6 7 6v11M10 21v-6h4v6"/></svg>`,
+  role_repair: `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7.4 16.6 3a3.4 3.4 0 0 0-4.7 4.7l-8 8a2 2 0 1 0 2.8 2.8l8-8A3.4 3.4 0 0 0 21 7.4z"/></svg>`,
+  role_admin: `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 13a7.4 7.4 0 0 0 .1-2l2-1.5-2-3.4-2.4.8a7.6 7.6 0 0 0-1.7-1L15 3h-4l-.4 2.9a7.6 7.6 0 0 0-1.7 1l-2.4-.8-2 3.4 2 1.5a7.4 7.4 0 0 0 0 2l-2 1.5 2 3.4 2.4-.8a7.6 7.6 0 0 0 1.7 1L11 21h4l.4-2.9a7.6 7.6 0 0 0 1.7-1l2.4.8 2-3.4z"/></svg>`,
+};
+
+function typeIcon(t){
+  const map={'水电':ICON.bolt,'家具':ICON.sofa,'门窗':ICON.window,'卫浴':ICON.shower,'网络':ICON.wifi,'空调':ICON.snow,'其他':ICON.more};
+  return map[t]||ICON.more;
+}
+function typeColor(t){
+  const map={'水电':'#2F6FED','家具':'#B5740E','门窗':'#5B3FD6','卫浴':'#0E8A78','网络':'#16834A','空调':'#0E8FB5','其他':'#7A828E'};
+  return map[t]||'#7A828E';
+}
+
+/* ---------------- 常量 ---------------- */
+const STATUS_LABEL = { pending:'待派单', assigned:'已派单', repairing:'维修中', to_evaluate:'待评价', completed:'已完成', rejected:'已退回', cancelled:'已取消' };
+const STATUS_BADGE  = { pending:'badge-pending', assigned:'badge-assigned', repairing:'badge-repairing', to_evaluate:'badge-evaluate', completed:'badge-completed', rejected:'badge-rejected', cancelled:'badge-cancelled' };
+const FAULT_TYPES = ['水电','家具','网络','空调','门窗','卫浴','其他'];
+const COMPLAINT_STATUS_LABEL = { pending:'待处理', processing:'处理中', resolved:'已解决', closed:'已关闭' };
+const ROLE_LABEL = { student:'学生', dorm_admin:'宿舍管理员', repairman:'维修人员', admin:'系统管理员' };
+const ROLE_ICON  = { student:'role_student', dorm_admin:'role_dorm', repairman:'role_repair', admin:'role_admin' };
+
+function statusBadge(s){ return `<span class="badge ${STATUS_BADGE[s]||''}">${STATUS_LABEL[s]||s}</span>`; }
+function roleName(r){ return ROLE_LABEL[r]||r; }
+function genId(prefix){ return prefix + Date.now() + Math.floor(Math.random()*1000); }
+function pad(n){ return String(n).padStart(2,'0'); }
+function fmtTime(ts){ if(!ts) return '—'; const d=new Date(ts); return `${d.getMonth()+1}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+function fmtDate(ts){ if(!ts) return '—'; const d=new Date(ts); return `${d.getMonth()+1}-${pad(d.getDate())}`; }
+function maskPhone(p){ if(!p||p.length<7) return p||'—'; return p.slice(0,3)+'****'+p.slice(-4); }
+function ts(daysAgo, hoursAgo=0){ return Date.now() - daysAgo*86400000 - hoursAgo*3600000; }
+function esc(s){ return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+/* ---------------- 种子数据（字段与网页端 app.js 一致） ---------------- */
+function createSeedData(){
+  return {
+    user_info: [
+      { user_id:'U001', name:'韩房佳茵', role:'student',    contact:'13800138001', dorm_building:'知新楼', password:'123456' },
+      { user_id:'U002', name:'李明阳',   role:'student',    contact:'13800138002', dorm_building:'励学楼', password:'123456' },
+      { user_id:'U003', name:'王璐曜',   role:'dorm_admin', contact:'13800138003', dorm_building:'知新楼', password:'123456' },
+      { user_id:'U004', name:'周天临',   role:'repairman',  contact:'13800138004', dorm_building:'',       password:'123456' },
+      { user_id:'U005', name:'张国强',   role:'repairman',  contact:'13800138005', dorm_building:'',       password:'123456' },
+      { user_id:'U006', name:'刘明泽',   role:'repairman',  contact:'13800138006', dorm_building:'',       password:'123456' },
+      { user_id:'U007', name:'余锐新',   role:'admin',      contact:'13800138007', dorm_building:'',       password:'123456' },
+    ],
+    repairman_skill: [
+      { repairman_id:'U004', skill_tag:'水电', workload:2, schedule:'周一至周五 08:00-17:00', avg_score:4.6 },
+      { repairman_id:'U005', skill_tag:'家具', workload:1, schedule:'周一至周六 09:00-18:00', avg_score:4.3 },
+      { repairman_id:'U006', skill_tag:'空调', workload:3, schedule:'周二至周日 08:00-16:00', avg_score:4.8 },
+    ],
+    repair_order: [
+      { order_id:'JD10001', user_id:'U001', fault_type:'水电', description:'宿舍洗手间水龙头漏水，已影响正常使用，请尽快派人维修。', img_url:'', address:'知新楼 301室', appoint_time:'', need_company:false, status:'completed', create_time:ts(10), assign_time:ts(9), repair_time:ts(8), complete_time:ts(7), repair_result:'更换了水龙头密封圈，漏水问题已解决。', complete_img:'' },
+      { order_id:'JD10002', user_id:'U001', fault_type:'网络', description:'宿舍网络端口无法连接，网线插入后无信号，影响学习。', img_url:'', address:'知新楼 301室', appoint_time:'', need_company:true, status:'to_evaluate', create_time:ts(5), assign_time:ts(4), repair_time:ts(3), complete_time:null, repair_result:'重新压制了网线水晶头，端口恢复正常。', complete_img:'' },
+      { order_id:'JD10003', user_id:'U002', fault_type:'空调', description:'空调不制冷，开机后只吹热风，室内温度过高无法正常休息。', img_url:'', address:'励学楼 215室', appoint_time:'', need_company:false, status:'repairing', create_time:ts(3), assign_time:ts(2), repair_time:null, complete_time:null, repair_result:'', complete_img:'' },
+      { order_id:'JD10004', user_id:'U001', fault_type:'家具', description:'上铺床架松动，翻身时有异响，存在安全隐患，请尽快检修。', img_url:'', address:'知新楼 301室', appoint_time:'', need_company:false, status:'assigned', create_time:ts(2), assign_time:ts(1), repair_time:null, complete_time:null, repair_result:'', complete_img:'' },
+      { order_id:'JD10005', user_id:'U002', fault_type:'门窗', description:'宿舍门锁损坏，无法从外部开锁，严重影响出入安全。', img_url:'', address:'励学楼 215室', appoint_time:'', need_company:true, status:'pending', create_time:ts(1), assign_time:null, repair_time:null, complete_time:null, repair_result:'', complete_img:'' },
+    ],
+    assign_record: [
+      { assign_id:'AS001', order_id:'JD10001', repairman_id:'U004', assign_time:ts(9), is_auto:true },
+      { assign_id:'AS002', order_id:'JD10002', repairman_id:'U004', assign_time:ts(4), is_auto:false },
+      { assign_id:'AS003', order_id:'JD10003', repairman_id:'U006', assign_time:ts(2), is_auto:true },
+      { assign_id:'AS004', order_id:'JD10004', repairman_id:'U005', assign_time:ts(1), is_auto:true },
+    ],
+    repair_feedback: [
+      { feedback_id:'FB001', order_id:'JD10001', speed_score:5, attitude_score:5, quality_score:4, suggestion:'维修及时，态度很好，下次可以更快一些。', feedback_time:ts(7) },
+    ],
+    material_usage: [
+      { record_id:'MU001', order_id:'JD10001', material_name:'水龙头密封圈', quantity:2, use_time:ts(8) },
+    ],
+    notice: [
+      { notice_id:'NT001', publisher_id:'U007', title:'暑期宿舍报修服务时间调整通知', content:'因暑期维修人员部分休假，7月15日至8月15日期间，报修服务时间调整为每周一、三、五上午9:00-12:00，请同学们合理安排报修时间。紧急情况请拨打宿舍管理处电话。', target_role:'all', publish_time:ts(3), status:'active' },
+      { notice_id:'NT002', publisher_id:'U007', title:'关于空调维修排期的说明', content:'近期空调报修量较大，预计等待时间为3-5个工作日，感谢同学们的理解与配合。', target_role:'student', publish_time:ts(1), status:'active' },
+    ],
+    complaint: [
+      { complaint_id:'CP001', user_id:'U001', order_id:'JD10001', type:'order', content:'维修人员上门时间与预约时间相差两小时，希望以后能准时。', status:'resolved', reply_content:'非常抱歉给您带来不便，我们已对维修人员进行了提醒，后续会严格管控时效。', reply_user_id:'U007', create_time:ts(6), reply_time:ts(5) },
+    ],
+    message_push: [
+      { push_id:'MP001', user_id:'U001', order_id:'JD10002', push_type:'status_change', content:'您的工单 JD10002（网络）已完成维修，请及时进行评价。', push_time:ts(3), is_read:false },
+      { push_id:'MP002', user_id:'U004', order_id:'JD10002', push_type:'assigned',      content:'您有新的维修任务：JD10002（网络），地点：知新楼 301室，请尽快处理。', push_time:ts(4), is_read:true },
+      { push_id:'MP003', user_id:'U007', order_id:'JD10005', push_type:'new_order',     content:'新工单待派单：JD10005（门窗），励学楼 215室。', push_time:ts(1), is_read:false },
+    ],
+  };
+}
+
+/* ---------------- Flask API 同步层（与桌面端共享同一 MySQL） ---------------- */
+const API_BASE = 'http://localhost:5001';
+const ALL_TABLES = ['user_info','repair_order','repairman_skill','assign_record',
+  'repair_feedback','material_usage','notice','complaint','message_push','sys_config','sys_log'];
+const TABLE_PK = {
+  user_info:'user_id', repair_order:'order_id', repairman_skill:'repairman_id',
+  assign_record:'assign_id', repair_feedback:'feedback_id', material_usage:'record_id',
+  notice:'notice_id', complaint:'complaint_id', message_push:'push_id',
+  sys_config:'config_id', sys_log:'log_id'
+};
+const SYNC = {
+  enabled: false,
+  async init(){
+    try {
+      const r = await fetch(`${API_BASE}/api/ping`, { signal: AbortSignal.timeout(3000) });
+      const d = await r.json();
+      if(d.ok){ this.enabled=true; await this.pullAll(); }
+    } catch(e){ console.warn('Flask 未启动，离线模式'); }
+  },
+  async pullAll(){
+    if(!this.enabled) return;
+    for(const t of ALL_TABLES){
+      try {
+        const rows = await fetch(`${API_BASE}/api/${t}`).then(r=>r.json());
+        if(Array.isArray(rows) && rows.length>0) DB._d[t]=rows;
+      } catch(e){}
+    }
+    DB.save();
+  },
+  async push(table, op, row, id){
+    if(!this.enabled) return;
+    try {
+      if(op==='insert'){
+        await fetch(`${API_BASE}/api/${table}`,{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(row) });
+      } else if(op==='update'){
+        await fetch(`${API_BASE}/api/${table}/${id}`,{ method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(row) });
+      } else if(op==='delete'){
+        await fetch(`${API_BASE}/api/${table}/${id}`,{ method:'DELETE' });
+      }
+    } catch(e){ console.warn(`push [${table}] 失败`,e); }
+  }
+};
+
+/* ---------------- DB（localStorage 缓存 + MySQL 同步） ---------------- */
+const DB = {
+  KEY: 'jlu_dorm_repair_mobile_db',
+  _d: null,
+  load(){ const raw=localStorage.getItem(this.KEY); this._d = raw?JSON.parse(raw):null; if(!this._d){ this._d=createSeedData(); this.save(); } return this._d; },
+  save(){ localStorage.setItem(this.KEY, JSON.stringify(this._d)); },
+  get(table){ return (this._d[table]||[]).slice(); },
+  insert(table,row){
+    if(!this._d[table]) this._d[table]=[];
+    this._d[table].push(row); this.save();
+    SYNC.push(table,'insert',row);
+    return row;
+  },
+  update(table,idField,id,patch){
+    const arr=this._d[table]||[]; const i=arr.findIndex(r=>r[idField]===id);
+    if(i>=0){ arr[i]={...arr[i],...patch}; this.save(); SYNC.push(table,'update',patch,id); return arr[i]; }
+    return null;
+  },
+  reset(){ this._d = createSeedData(); this.save(); }
+};
+DB.load();
+SYNC.init();
+
+/* ---------------- 业务辅助查询 ---------------- */
+function getUserName(uid){ const u=DB.get('user_info').find(u=>u.user_id===uid); return u?u.name:uid; }
+function getUser(uid){ return DB.get('user_info').find(u=>u.user_id===uid)||null; }
+function getRepairmanSkill(rid){ return DB.get('repairman_skill').find(s=>s.repairman_id===rid)||null; }
+function getOrderAssign(orderId){ const recs=DB.get('assign_record').filter(a=>a.order_id===orderId); return recs.length?recs[recs.length-1]:null; }
+function getOrder(orderId){ return DB.get('repair_order').find(o=>o.order_id===orderId)||null; }
+function emptyState(msg){
+  return `<div class="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#C7CCD4" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l2-4h14l2 4M3 8v11a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V8M3 8h18M8 12h8"/></svg><div class="es-title">${esc(msg||'暂无数据')}</div></div>`;
+}
+
+/* ---------------- 智能派单候选人（与网页端逻辑一致：技能匹配 + 按负载升序） ---------------- */
+function getSmartCandidates(faultType){
+  const skills = DB.get('repairman_skill');
+  const matched = skills.filter(s=>s.skill_tag===faultType || faultType==='其他');
+  const pool = matched.length?matched:skills;
+  return pool.slice().sort((a,b)=>a.workload-b.workload).map(s=>({...s, name:getUserName(s.repairman_id)}));
+}
+
+/* ---------------- 状态机：工单状态变更 + 消息推送 ---------------- */
+function buildPushMessages(order, newStatus, meta){
+  const msgs=[]; const now=Date.now();
+  const fmsg=(userId,content,pushType)=>({ push_id:genId('MP'), user_id:userId, order_id:order.order_id, push_type:pushType||'status_change', content, push_time:now, is_read:false });
+  switch(newStatus){
+    case 'assigned':
+      msgs.push(fmsg(order.user_id, `您的工单 ${order.order_id}（${order.fault_type}）已派单，请等待维修人员上门。`,'assigned'));
+      if(meta.repairman_id) msgs.push(fmsg(meta.repairman_id, `您有新的维修任务：${order.order_id}（${order.fault_type}），地点：${order.address}。`,'assigned'));
+      msgs.push(fmsg('U007', `工单 ${order.order_id} 已完成派单。`,'assigned'));
+      break;
+    case 'repairing':
+      msgs.push(fmsg(order.user_id, `维修人员已接单，正在前往 ${order.address} 进行维修，请保持联系。`,'repairing'));
+      break;
+    case 'to_evaluate':
+      msgs.push(fmsg(order.user_id, `您的工单 ${order.order_id}（${order.fault_type}）维修已完成，请进行评价。`,'evaluate_remind'));
+      break;
+    case 'completed':
+      msgs.push(fmsg('U007', `工单 ${order.order_id} 已完成评价，全流程结束。`,'status_change'));
+      break;
+    case 'rejected':
+      msgs.push(fmsg('U007', `工单 ${order.order_id} 被标记为【已退回】，请重新派单。`,'status_change'));
+      msgs.push(fmsg(order.user_id, `您的工单 ${order.order_id} 维修遇到问题，管理员将重新安排。`,'status_change'));
+      break;
+    case 'cancelled':
+      msgs.push(fmsg('U007', `工单 ${order.order_id} 已被取消。`,'status_change'));
+      break;
+  }
+  return msgs;
+}
+function updateOrderStatus(orderId, newStatus, meta={}){
+  DB.update('repair_order','order_id',orderId,{status:newStatus, ...meta});
+  const order = getOrder(orderId);
+  buildPushMessages(order,newStatus,meta).forEach(p=>DB.insert('message_push',p));
+}
+function assignOrder(orderId, repairmanId, isAuto){
+  DB.insert('assign_record',{ assign_id:genId('AS'), order_id:orderId, repairman_id:repairmanId, assign_time:Date.now(), is_auto:isAuto });
+  updateOrderStatus(orderId,'assigned',{ assign_time:Date.now(), repairman_id:repairmanId });
+  const skill = getRepairmanSkill(repairmanId);
+  if(skill) DB.update('repairman_skill','repairman_id',repairmanId,{ workload: skill.workload+1 });
+}
+
+/* ============================================================
+   认证 / 全局状态
+   ============================================================ */
+let currentUser = null;
+let draftLoginRole = null;
+
+function tryRestoreSession(){
+  const raw = sessionStorage.getItem('jlu_mobile_current_user');
+  if(raw){ try{ currentUser = JSON.parse(raw); }catch(e){ currentUser=null; } }
+}
+function doLogin(userId){
+  const u = getUser(userId);
+  if(!u) return;
+  currentUser = u;
+  sessionStorage.setItem('jlu_mobile_current_user', JSON.stringify(u));
+  navStack = [];
+  switchTab(TABS[u.role][0].key);
+}
+function doLogout(){
+  currentUser = null;
+  draftLoginRole = null;
+  sessionStorage.removeItem('jlu_mobile_current_user');
+  Object.keys(renderedScreens).forEach(k=>{ renderedScreens[k].remove(); delete renderedScreens[k]; });
+  navStack = ['login'];
+  showStack();
+}
+
+/* ============================================================
+   导航系统：栈式管理，返回按钮永远回到正确的上一页
+   ============================================================ */
+const TABS = {
+  student:    [ {key:'home',      label:'首页', icon:'home'},       {key:'orders',    label:'工单', icon:'list'},       {key:'messages', label:'消息', icon:'bell_o'}, {key:'profile', label:'我的', icon:'user_o'} ],
+  dorm_admin: [ {key:'overview',  label:'总览', icon:'grid'},       {key:'orders',    label:'工单', icon:'list'},       {key:'messages', label:'消息', icon:'bell_o'}, {key:'profile', label:'我的', icon:'user_o'} ],
+  repairman:  [ {key:'tasks',     label:'任务', icon:'clip_check'}, {key:'history',   label:'记录', icon:'list'},       {key:'messages', label:'消息', icon:'bell_o'}, {key:'profile', label:'我的', icon:'user_o'} ],
+  admin:      [ {key:'assign',    label:'派单', icon:'send'},       {key:'workbench', label:'工作台', icon:'work_o'},    {key:'messages', label:'消息', icon:'bell_o'}, {key:'profile', label:'我的', icon:'user_o'} ],
+};
+
+let navStack = ['login'];
+const screensEl = document.getElementById('screens');
+const renderedScreens = {};
+
+function renderScreen(key){
+  const [name] = key.split(':');
+  const param = key.slice(name.length+1);
+  const fn = SCREEN_RENDERERS[name];
+  const html = fn ? fn(param) : `<div class="section">页面未找到：${esc(name)}</div>`;
+  let el = renderedScreens[key];
+  if(!el){ el=document.createElement('div'); el.className='screen'; el.dataset.key=key; screensEl.appendChild(el); renderedScreens[key]=el; }
+  el.innerHTML = html;
+  return el;
+}
+function showStack(){
+  const activeKey = navStack[navStack.length-1];
+  const underKey  = navStack.length>1 ? navStack[navStack.length-2] : null;
+  renderScreen(activeKey);
+  if(underKey && !renderedScreens[underKey]) renderScreen(underKey);
+  Object.keys(renderedScreens).forEach(k=>{
+    const el = renderedScreens[k];
+    el.classList.remove('active','under');
+    if(k===activeKey) el.classList.add('active');
+    else if(k===underKey) el.classList.add('under');
+  });
+  renderTabbar();
+  updateTabbarVisibility();
+}
+function go(key){ navStack.push(key); showStack(); }
+function dropScreen(key){ if(renderedScreens[key]){ renderedScreens[key].remove(); delete renderedScreens[key]; } }
+function replaceTop(key){ navStack[navStack.length-1]=key; dropScreen(key); showStack(); }
+function back(){ if(navStack.length<=1) return; const leaving=navStack.pop(); dropScreen(leaving); showStack(); }
+function refresh(){ const k=navStack[navStack.length-1]; dropScreen(k); showStack(); }
+function resetToTab(tabKey){ navStack=[tabKey]; showStack(); }
+function switchTab(tabKey){ resetToTab(tabKey); }
+
+function updateTabbarVisibility(){
+  if(!currentUser){ document.getElementById('bottomTabbar').style.display='none'; return; }
+  const top = navStack[navStack.length-1].split(':')[0];
+  const tabs = TABS[currentUser.role];
+  const isRoot = tabs.some(t=>t.key===top);
+  document.getElementById('bottomTabbar').style.display = isRoot?'flex':'none';
+  if(isRoot){
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===top));
+  }
+}
+function renderTabbar(){
+  const bar = document.getElementById('bottomTabbar');
+  if(!currentUser){ bar.innerHTML=''; return; }
+  const tabs = TABS[currentUser.role];
+  const top = navStack[navStack.length-1].split(':')[0];
+  bar.innerHTML = tabs.map(t=>{
+    const unread = t.key==='messages' ? DB.get('message_push').filter(m=>m.user_id===currentUser.user_id && !m.is_read).length : 0;
+    return `<div class="tab-btn ${top===t.key?'active':''}" data-tab="${t.key}" onclick="switchTab('${t.key}')">
+      ${ICON[t.icon]}
+      <span>${t.label}</span>
+      ${unread>0?`<div class="tab-badge">${unread>9?'9+':unread}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+/* ---------------- Toast & Modal ---------------- */
+let toastTimer=null;
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),1900);
+}
+function showModal({title, bodyHtml='', okText='确定', cancelText='取消', onOk, danger=false, hideCancel=false, wide=false}){
+  const ov=document.getElementById('modalOverlay');
+  ov.innerHTML = `
+    <div class="modal-box" style="${wide?'width:320px;':''}">
+      <div class="modal-title">${esc(title)}</div>
+      ${bodyHtml}
+      <div class="modal-btns">
+        ${hideCancel?'':`<button class="btn btn-ghost" style="height:42px;font-size:14px;" onclick="closeModal()">${esc(cancelText)}</button>`}
+        ${onOk!==null?`<button class="btn" style="height:42px;font-size:14px;${danger?'background:var(--danger);color:#fff;':'background:var(--primary);color:#fff;'}" id="modalOkBtn">${esc(okText)}</button>`:''}
+      </div>
+    </div>`;
+  ov.classList.add('show');
+  if(onOk!==null){ document.getElementById('modalOkBtn').onclick = ()=>{ onOk(); closeModal(); }; }
+}
+function closeModal(){ document.getElementById('modalOverlay').classList.remove('show'); document.getElementById('modalOverlay').innerHTML=''; }
+function confirmDialog(title, msg, onOk, danger=false){
+  showModal({ title, bodyHtml:`<div class="modal-msg">${esc(msg)}</div>`, okText:danger?'确认':'确定', onOk, danger });
+}
+
+/* ============================================================
+   共享组件
+   ============================================================ */
+function topnav(title, opts={}){
+  return `<div class="topnav">
+    ${opts.noBack?'<div class="nav-btn"></div>':`<div class="nav-btn" onclick="back()">${ICON.back}</div>`}
+    <div class="nav-title">${esc(title)}</div>
+    <div class="nav-right">${opts.rightText?`<span class="nav-right-text" onclick="${opts.rightOnClick}">${esc(opts.rightText)}</span>`:''}</div>
+  </div>`;
+}
+function ticketCard(o, opts={}){
+  const c = typeColor(o.fault_type);
+  return `<div class="ticket-card" onclick="go('order-detail:${o.order_id}')">
+    <div class="ticket-top">
+      <div class="ticket-type">
+        <div class="ic" style="background:${c}1A;color:${c}">${typeIcon(o.fault_type)}</div>
+        <div>
+          <div style="font-size:14.5px;font-weight:700;color:var(--text)">${esc(o.fault_type)}故障</div>
+          <div class="ticket-id">${o.order_id}</div>
+        </div>
+      </div>
+      ${statusBadge(o.status)}
+    </div>
+    <div class="ticket-desc">${esc(o.description)}</div>
+    <div class="ticket-meta">
+      <span>${esc(o.address)}</span>
+      <span>${fmtTime(o.create_time)}</span>
+    </div>
+    ${opts.extra||''}
+  </div>`;
+}
+function orderTimeline(order){
+  const assign = getOrderAssign(order.order_id);
+  const repairman = assign ? getUser(assign.repairman_id) : null;
+  const feedback = DB.get('repair_feedback').find(f=>f.order_id===order.order_id);
+  if(order.status==='cancelled'){
+    return `<div class="timeline">
+      <div class="tl-item"><div class="tl-dot-col"><div class="tl-dot done">${ICON.check}</div></div><div class="tl-body"><div class="tl-title">提交工单</div><div class="tl-sub">${fmtTime(order.create_time)}</div></div></div>
+      <div class="tl-item"><div class="tl-dot-col"><div class="tl-dot fail">${ICON.x}</div></div><div class="tl-body"><div class="tl-title">已取消</div><div class="tl-sub">学生主动取消该工单</div></div></div>
+    </div>`;
+  }
+  const steps = [
+    { key:'pending', label:'提交工单', time:order.create_time, sub:`由 ${getUserName(order.user_id)} 提交` },
+    { key:'assigned', label:'已派单', time:order.assign_time, sub: assign?`派给 ${repairman?repairman.name:assign.repairman_id}`:'' },
+    { key:'repairing', label:'维修中', time:order.repair_time, sub: order.status==='rejected'?'':'维修人员已上门' },
+    { key:'to_evaluate', label:'待评价', time:order.complete_time, sub: order.repair_result?'维修完成，等待评价':'' },
+    { key:'completed', label:'已完成', time: order.status==='completed'?order.complete_time:null, sub: feedback?`评分 速度${feedback.speed_score}★ 态度${feedback.attitude_score}★ 质量${feedback.quality_score}★`:'' },
+  ];
+  const order_seq = ['pending','assigned','repairing','to_evaluate','completed'];
+  const curIdx = order.status==='rejected' ? 2 : order_seq.indexOf(order.status);
+  return `<div class="timeline">` + steps.map((s,i)=>{
+    let dotCls='', lineCls='';
+    if(order.status==='rejected' && i===2){ dotCls='fail'; }
+    else if(i<curIdx || order.status==='completed'){ dotCls='done'; lineCls='done'; }
+    else if(i===curIdx){ dotCls='now'; }
+    const titleCls = (dotCls==='' ) ? 'muted' : '';
+    return `<div class="tl-item">
+      <div class="tl-dot-col">
+        <div class="tl-dot ${dotCls}">${dotCls==='done'?ICON.check:dotCls==='fail'?ICON.x:''}</div>
+        ${i<steps.length-1?`<div class="tl-line ${lineCls}"></div>`:''}
+      </div>
+      <div class="tl-body">
+        <div class="tl-title ${titleCls}">${s.label}${order.status==='rejected'&&i===2?'（无法维修）':''}</div>
+        <div class="tl-sub">${s.time?fmtTime(s.time):'等待中'}${s.sub?' · '+esc(s.sub):''}</div>
+      </div>
+    </div>`;
+  }).join('') + `</div>`;
+}
+function uploadGridHtml(idPrefix, photos){
+  const colors=['#2F6FED','#16834A','#B5740E','#5B3FD6','#0E8FB5'];
+  return `<div class="upload-grid" id="${idPrefix}-grid">
+    ${photos.map((c,i)=>`<div class="upload-tile" style="background:${c}">${ICON.camera}<div class="del" onclick="removePhoto('${idPrefix}',${i})">${`<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>`}</div></div>`).join('')}
+    ${photos.length<5?`<div class="upload-add" onclick="addPhoto('${idPrefix}')">${ICON.camera}<span>添加照片</span></div>`:''}
+  </div>`;
+}
+const PHOTO_STATE = {};
+function addPhoto(idPrefix){
+  const colors=['#2F6FED','#16834A','#B5740E','#5B3FD6','#0E8FB5','#E5484D'];
+  if(!PHOTO_STATE[idPrefix]) PHOTO_STATE[idPrefix]=[];
+  if(PHOTO_STATE[idPrefix].length>=5) return;
+  PHOTO_STATE[idPrefix].push(colors[PHOTO_STATE[idPrefix].length % colors.length]);
+  document.getElementById(idPrefix+'-grid').outerHTML = uploadGridHtml(idPrefix, PHOTO_STATE[idPrefix]);
+}
+function removePhoto(idPrefix, i){
+  PHOTO_STATE[idPrefix].splice(i,1);
+  document.getElementById(idPrefix+'-grid').outerHTML = uploadGridHtml(idPrefix, PHOTO_STATE[idPrefix]);
+}
+
+/* ============================================================
+   登录页
+   ============================================================ */
+function screen_login(){
+  const roles=[
+    {role:'student', icon:'role_student', name:'学生', desc:'提交工单 / 查看进度'},
+    {role:'dorm_admin', icon:'role_dorm', name:'宿舍管理员', desc:'楼栋总览 / 协助登记'},
+    {role:'repairman', icon:'role_repair', name:'维修人员', desc:'接单 / 填写记录'},
+    {role:'admin', icon:'role_admin', name:'系统管理员', desc:'派单 / 投诉 / 公告'},
+  ];
+  const users = draftLoginRole ? DB.get('user_info').filter(u=>u.role===draftLoginRole) : [];
+  return `<div class="screen-scroll login-screen">
+    <div class="login-top">
+      <div class="login-badge">${`<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V10l7-6 7 6v11M10 21v-6h4v6"/></svg>`}</div>
+      <div class="login-title">吉林大学宿舍报修系统</div>
+      <div class="login-sub">移动端 · 信息系统分析与设计课程原型</div>
+    </div>
+    <div class="login-form">
+      <label>选择身份</label>
+      <div class="role-grid">
+        ${roles.map(r=>`<div class="role-card ${draftLoginRole===r.role?'selected':''}" onclick="selectLoginRole('${r.role}')">
+          <div class="rc-ic">${ICON[r.icon]}</div>
+          <div class="rc-name">${r.name}</div>
+          <div class="rc-desc">${r.desc}</div>
+        </div>`).join('')}
+      </div>
+      ${draftLoginRole?`
+      <label style="margin-top:6px;">选择演示账号</label>
+      <select id="login-user-select">
+        ${users.map(u=>`<option value="${u.user_id}">${u.name}　${u.dorm_building?'· '+u.dorm_building:''}</option>`).join('')}
+      </select>
+      <button class="btn btn-primary" style="margin-top:6px;" onclick="doLogin(document.getElementById('login-user-select').value)">登录系统</button>
+      `:`<div style="text-align:center;color:var(--text-tertiary);font-size:12.5px;padding:10px 0;">请选择上方身份后选择演示账号登录</div>`}
+      <div style="text-align:center;margin-top:18px;">
+        <span style="font-size:12px;color:var(--text-tertiary);text-decoration:underline;cursor:pointer;" onclick="handleResetDemo()">⚠ 重置演示数据</span>
+      </div>
+    </div>
+  </div>`;
+}
+function selectLoginRole(role){ draftLoginRole = role; refresh(); }
+function handleResetDemo(){
+  confirmDialog('重置演示数据','将清空当前所有演示操作记录，恢复到初始工单/账号状态，确定继续？', ()=>{
+    DB.reset(); showToast('演示数据已重置'); refresh();
+  }, true);
+}
+
+/* ============================================================
+   学生端
+   ============================================================ */
+function screen_home(){
+  const myOrders = DB.get('repair_order').filter(o=>o.user_id===currentUser.user_id).sort((a,b)=>b.create_time-a.create_time);
+  const active = myOrders.find(o=>!['completed','cancelled'].includes(o.status));
+  const notices = DB.get('notice').filter(n=>n.status==='active' && (n.target_role==='all'||n.target_role==='student')).sort((a,b)=>b.publish_time-a.publish_time).slice(0,2);
+  return `<div class="screen-scroll">
+    <div class="home-header">
+      <div class="greet">你好，${esc(currentUser.name)} 👋</div>
+      <div class="dorm-chip">${ICON.building}${esc(currentUser.dorm_building)}</div>
+    </div>
+    <div class="cta-repair" onclick="go('submit')">
+      <div class="cta-title">${ICON.plus} 一键报修</div>
+      <div class="cta-sub">水电 / 家具 / 网络 / 空调等故障，随手报修</div>
+      <div class="cta-arrow">${ICON.chevron}</div>
+    </div>
+    <div class="section">
+      <div class="section-title">进行中工单<span class="more" onclick="switchTab('orders')">查看全部 ›</span></div>
+      ${active ? ticketCard(active) : `<div class="card" style="text-align:center;color:var(--text-tertiary);font-size:13px;padding:24px 0;">暂无进行中工单，去报修一下吧</div>`}
+    </div>
+    <div class="section" style="padding-top:0;">
+      <div class="section-title">通知公告<span class="more" onclick="switchTab('messages')">更多 ›</span></div>
+      ${notices.length?notices.map(n=>`<div class="notice-strip" style="margin:0 0 8px;" onclick="go('notice-detail:${n.notice_id}')">${ICON.megaphone_o}<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(n.title)}</span>${ICON.chevron}</div>`).join(''):''}
+    </div>
+    <div style="height:14px;"></div>
+  </div>`;
+}
+
+
+function screen_orders(){
+  if(currentUser.role==='student') return screen_orders_student();
+  if(currentUser.role==='dorm_admin') return screen_orders_dorm();
+  return `<div class="section">无此页面</div>`;
+}
+let ordersFilter = 'all';
+function screen_orders_student(){
+  let orders = DB.get('repair_order').filter(o=>o.user_id===currentUser.user_id).sort((a,b)=>b.create_time-a.create_time);
+  if(ordersFilter==='active') orders = orders.filter(o=>!['completed','cancelled'].includes(o.status));
+  if(ordersFilter==='completed') orders = orders.filter(o=>['completed','cancelled'].includes(o.status));
+  const tabs=[{k:'all',l:'全部'},{k:'active',l:'进行中'},{k:'completed',l:'已完成'}];
+  return `
+    <div class="topnav" style="justify-content:center;"><div class="nav-title" style="position:static;">我的工单</div></div>
+    <div class="section" style="padding-bottom:6px;">
+      <div class="segment">${tabs.map(t=>`<div class="seg-item ${ordersFilter===t.k?'active':''}" onclick="ordersFilter='${t.k}';refresh();">${t.l}</div>`).join('')}</div>
+    </div>
+    <div class="screen-scroll"><div class="section" style="padding-top:0;">
+      ${orders.length?orders.map(o=>ticketCard(o)).join(''):emptyState('暂无工单，快去提交第一条报修吧')}
+    </div></div>`;
+}
+
+function screen_submit(){
+  const u = currentUser;
+  PHOTO_STATE['submit'] = PHOTO_STATE['submit']||[];
+  return `${topnav('提交工单')}
+    <div class="screen-scroll"><div class="section">
+      <div class="field-label">故障类型 <span class="req">*</span></div>
+      <div class="type-grid" id="submit-type-grid">
+        ${FAULT_TYPES.map(t=>`<div class="type-item" data-type="${t}" onclick="selectFaultType('submit','${t}')"><div class="ic">${typeIcon(t)}</div><span>${t}</span></div>`).join('')}
+      </div>
+      <div style="height:16px;"></div>
+      <div class="field-label">报修地址 <span class="req">*</span></div>
+      <input type="text" id="submit-address" value="${esc(u.dorm_building)} " placeholder="楼号+房间号">
+      <div style="height:14px;"></div>
+      <div class="field-label">故障描述 <span class="req">*</span></div>
+      <textarea id="submit-desc" placeholder="请详细描述故障情况，便于维修人员准备工具和零件…"></textarea>
+      <div style="height:14px;"></div>
+      <div class="field-label">预约维修时间</div>
+      <input type="datetime-local" id="submit-appoint">
+      <div style="height:14px;"></div>
+      <div class="switch-row">
+        <div class="field-label" style="margin:0;">是否需要宿管陪同</div>
+        <div class="switch" id="submit-company-switch" onclick="toggleSwitch('submit-company-switch')"><div class="knob"></div></div>
+      </div>
+      <div style="height:14px;"></div>
+      <div class="field-label">故障图片（可选）</div>
+      ${uploadGridHtml('submit', PHOTO_STATE['submit'])}
+      <div style="height:22px;"></div>
+      <button class="btn btn-primary" onclick="handleSubmitOrder()">提交工单</button>
+      <div style="height:10px;"></div>
+    </div></div>`;
+}
+function selectFaultType(scope, type){
+  document.querySelectorAll(`#${scope}-type-grid .type-item`).forEach(el=>{
+    el.classList.toggle('selected', el.dataset.type===type);
+  });
+}
+function toggleSwitch(id){ document.getElementById(id).classList.toggle('on'); }
+function getSelectedType(scope){
+  const el = document.querySelector(`#${scope}-type-grid .type-item.selected`);
+  return el?el.dataset.type:'';
+}
+function handleSubmitOrder(){
+  const faultType = getSelectedType('submit');
+  const address = document.getElementById('submit-address').value.trim();
+  const desc = document.getElementById('submit-desc').value.trim();
+  const appoint = document.getElementById('submit-appoint').value;
+  const company = document.getElementById('submit-company-switch').classList.contains('on');
+  if(!faultType || !address || !desc){ showToast('请完整填写故障类型、地址和描述'); return; }
+  const order = {
+    order_id:'JD'+Date.now(), user_id:currentUser.user_id, fault_type:faultType, description:desc,
+    img_url:'', address, appoint_time:appoint, need_company:company, status:'pending', create_time:Date.now(),
+    assign_time:null, repair_time:null, complete_time:null, repair_result:'', complete_img:''
+  };
+  DB.insert('repair_order', order);
+  DB.insert('message_push', { push_id:genId('MP'), user_id:'U007', order_id:order.order_id, push_type:'new_order', content:`新工单待派单：${order.order_id}（${order.fault_type}），${order.address}。`, push_time:Date.now(), is_read:false });
+  PHOTO_STATE['submit']=[];
+  showToast('工单提交成功！');
+  replaceTop('order-detail:'+order.order_id);
+}
+
+function screen_order_detail(orderId){
+  const order = getOrder(orderId);
+  if(!order) return topnav('工单详情')+`<div class="section">${emptyState('工单不存在')}</div>`;
+  const assign = getOrderAssign(orderId);
+  const repairman = assign?getUser(assign.repairman_id):null;
+  const materials = DB.get('material_usage').filter(m=>m.order_id===orderId);
+  const feedback = DB.get('repair_feedback').find(f=>f.order_id===orderId);
+  const role = currentUser.role;
+
+  let actions = '';
+  if(role==='student'){
+    if(order.status==='to_evaluate') actions += `<button class="btn btn-primary" onclick="go('evaluate:${orderId}')">${ICON.star_f.replace('viewBox="0 0 24 24"','width="16" height="16" viewBox="0 0 24 24"')} 去评价</button>`;
+    if(['pending','assigned'].includes(order.status)) actions += `<button class="btn btn-danger-outline" style="margin-top:8px;" onclick="handleCancelOrder('${orderId}')">取消工单</button>`;
+  } else if(role==='repairman' && assign && assign.repairman_id===currentUser.user_id){
+    if(order.status==='assigned') actions += `<button class="btn btn-primary" onclick="handleAcceptOrder('${orderId}')">接单确认</button>`;
+    if(order.status==='repairing') actions += `<button class="btn btn-primary" onclick="go('repair-record:${orderId}')">填写完工记录</button>`;
+  } else if(role==='admin'){
+    if(['pending','rejected'].includes(order.status)) actions += `<button class="btn btn-primary" onclick="openAssignModal('${orderId}','${order.fault_type}')">派单</button>`;
+  }
+
+  return `${topnav('工单详情 · '+orderId)}
+  <div class="screen-scroll"><div class="section">
+    <div class="card" style="margin-bottom:12px;">
+      <div class="section-title" style="margin-bottom:8px;">基本信息${statusBadge(order.status)}</div>
+      <div class="info-card-row"><span class="k">报修人</span><span class="v">${esc(getUserName(order.user_id))}</span></div>
+      <div class="info-card-row"><span class="k">故障类型</span><span class="v">${esc(order.fault_type)}</span></div>
+      <div class="info-card-row"><span class="k">报修地址</span><span class="v">${esc(order.address)}</span></div>
+      ${order.need_company?'<div class="info-card-row"><span class="k">宿管陪同</span><span class="v">需要</span></div>':''}
+      ${order.appoint_time?`<div class="info-card-row"><span class="k">预约时间</span><span class="v">${esc(order.appoint_time.replace('T',' '))}</span></div>`:''}
+      <hr class="div" style="margin:8px 0;">
+      <div style="font-size:13px;color:var(--text-secondary);line-height:1.6;">${esc(order.description)}</div>
+    </div>
+    ${repairman ? `<div class="card" style="margin-bottom:12px;">
+      <div class="section-title" style="margin-bottom:8px;">维修人员信息</div>
+      <div class="info-card-row"><span class="k">姓名</span><span class="v">${esc(repairman.name)}</span></div>
+      <div class="info-card-row"><span class="k">联系方式</span><span class="v">${maskPhone(repairman.contact)}</span></div>
+      <div class="info-card-row"><span class="k">技能专长</span><span class="v">${esc(getRepairmanSkill(repairman.user_id)?.skill_tag||'—')}</span></div>
+      <div class="info-card-row"><span class="k">派单方式</span><span class="v">${assign.is_auto?'🤖 智能推荐':'👤 人工指定'}</span></div>
+    </div>`:''}
+    ${order.repair_result ? `<div class="card" style="margin-bottom:12px;">
+      <div class="section-title" style="margin-bottom:8px;">维修结果</div>
+      <div style="font-size:13px;color:var(--text-secondary);line-height:1.6;">${esc(order.repair_result)}</div>
+      ${materials.length?`<hr class="div" style="margin:8px 0;"><div class="field-label" style="margin-bottom:6px;">使用耗材</div>${materials.map(m=>`<div style="font-size:12.5px;color:var(--text-secondary);">· ${esc(m.material_name)} × ${m.quantity}</div>`).join('')}`:''}
+    </div>`:''}
+    ${feedback ? `<div class="card" style="margin-bottom:12px;">
+      <div class="section-title" style="margin-bottom:8px;">我的评价</div>
+      ${['speed','attitude','quality'].map((k,i)=>`<div class="star-row" style="padding:5px 0;"><span class="star-label">${['维修速度','服务态度','维修质量'][i]}</span><div class="stars">${[1,2,3,4,5].map(n=>`<span class="star">${n<=feedback[k+'_score']?ICON.star_f:ICON.star_o}</span>`).join('')}</div></div>`).join('')}
+      ${feedback.suggestion?`<hr class="div" style="margin:6px 0;"><div style="font-size:12.5px;color:var(--text-secondary);">${esc(feedback.suggestion)}</div>`:''}
+    </div>`:''}
+    <div class="card" style="margin-bottom:14px;">
+      <div class="section-title" style="margin-bottom:8px;">流程进度</div>
+      ${orderTimeline(order)}
+    </div>
+    ${actions}
+    <div style="height:10px;"></div>
+  </div></div>`;
+}
+function handleCancelOrder(orderId){
+  confirmDialog('取消工单','确认取消该工单？取消后无法恢复。', ()=>{
+    updateOrderStatus(orderId,'cancelled');
+    showToast('工单已取消');
+    refresh();
+  }, true);
+}
+
+function screen_evaluate(orderId){
+  const order = getOrder(orderId);
+  if(!order) return topnav('维修评价')+`<div class="section">${emptyState('工单不存在')}</div>`;
+  const scores = {speed:0, attitude:0, quality:0};
+  window.__evalScores = scores;
+  const row = (key,label)=>`<div class="star-row">
+    <span class="star-label">${label} <span class="req">*</span></span>
+    <div class="stars" id="eval-stars-${key}">${[1,2,3,4,5].map(n=>`<span class="star" onclick="setEvalScore('${key}',${n})">${ICON.star_o}</span>`).join('')}</div>
+  </div>`;
+  return `${topnav('维修评价')}
+  <div class="screen-scroll"><div class="section">
+    <div class="card">
+      <div class="section-title" style="margin-bottom:4px;">服务评价</div>
+      <div style="font-size:12px;color:var(--text-tertiary);margin-bottom:10px;">工单 ${orderId} · ${esc(order.fault_type)} · ${esc(order.address)}</div>
+      ${row('speed','维修速度')}${row('attitude','服务态度')}${row('quality','维修质量')}
+      <div style="height:10px;"></div>
+      <div class="field-label">补充建议（可选）</div>
+      <textarea id="eval-suggestion" placeholder="您的宝贵意见将帮助我们改进服务…"></textarea>
+    </div>
+    <div style="height:16px;"></div>
+    <button class="btn btn-primary" onclick="handleSubmitEval('${orderId}')">提交评价</button>
+    <div style="height:10px;"></div>
+  </div></div>`;
+}
+function setEvalScore(key, val){
+  window.__evalScores[key]=val;
+  document.querySelectorAll(`#eval-stars-${key} .star`).forEach((el,i)=>{ el.innerHTML = (i<val)?ICON.star_f:ICON.star_o; });
+}
+function handleSubmitEval(orderId){
+  const s = window.__evalScores||{};
+  if(!s.speed||!s.attitude||!s.quality){ showToast('请完成全部评分（三项均需选择）'); return; }
+  const suggestion = document.getElementById('eval-suggestion').value.trim();
+  DB.insert('repair_feedback', { feedback_id:genId('FB'), order_id:orderId, speed_score:s.speed, attitude_score:s.attitude, quality_score:s.quality, suggestion, feedback_time:Date.now() });
+  const assign = getOrderAssign(orderId);
+  if(assign){
+    const allFb = DB.get('repair_feedback').filter(f=>{ const a=getOrderAssign(f.order_id); return a && a.repairman_id===assign.repairman_id; });
+    const avg = allFb.reduce((sum,f)=>sum+(f.speed_score+f.attitude_score+f.quality_score)/3,0)/allFb.length;
+    DB.update('repairman_skill','repairman_id',assign.repairman_id,{ avg_score: Math.round(avg*10)/10 });
+    const sk = getRepairmanSkill(assign.repairman_id);
+    if(sk) DB.update('repairman_skill','repairman_id',assign.repairman_id,{ workload: Math.max(0, sk.workload-1) });
+  }
+  updateOrderStatus(orderId,'completed',{ complete_time:Date.now() });
+  showToast('评价提交成功，感谢您的反馈！');
+  back();
+}
+
+/* ---------------- 投诉与建议（学生） ---------------- */
+let complaintTypeChoice = 'order';
+function screen_complaint(){
+  const myOrders = DB.get('repair_order').filter(o=>o.user_id===currentUser.user_id && o.status!=='cancelled');
+  const myComplaints = DB.get('complaint').filter(c=>c.user_id===currentUser.user_id).sort((a,b)=>b.create_time-a.create_time);
+  return `${topnav('投诉与建议')}
+  <div class="screen-scroll"><div class="section">
+    <div class="card">
+      <div class="section-title" style="margin-bottom:8px;">提交投诉 / 建议</div>
+      <div class="field-label">类型</div>
+      <div class="mini-seg">
+        <div class="ms-item ${complaintTypeChoice==='order'?'active':''}" onclick="complaintTypeChoice='order';refresh();">针对某条工单</div>
+        <div class="ms-item ${complaintTypeChoice==='general'?'active':''}" onclick="complaintTypeChoice='general';refresh();">系统整体建议</div>
+      </div>
+      ${complaintTypeChoice==='order'?`
+      <div class="field-label">关联工单</div>
+      <select id="complaint-order-id">
+        <option value="">不关联特定工单</option>
+        ${myOrders.map(o=>`<option value="${o.order_id}">${o.order_id} · ${esc(o.fault_type)}</option>`).join('')}
+      </select>
+      <div style="height:12px;"></div>`:''}
+      <div class="field-label">内容 <span class="req">*</span></div>
+      <textarea id="complaint-content" placeholder="请详细描述您的问题或建议…"></textarea>
+      <div style="height:14px;"></div>
+      <button class="btn btn-primary" onclick="handleSubmitComplaint()">提交</button>
+    </div>
+    <div style="height:18px;"></div>
+    <div class="section-title" style="padding:0 2px;">我的投诉记录</div>
+    ${myComplaints.length?myComplaints.map(c=>`
+      <div class="card" style="margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
+          <span style="font-size:11.5px;color:var(--text-tertiary);">${fmtDate(c.create_time)} · ${c.type==='order'?('工单 '+c.order_id):'系统建议'}</span>
+          <span class="badge ${c.status==='resolved'?'badge-completed':c.status==='closed'?'badge-cancelled':'badge-pending'}">${COMPLAINT_STATUS_LABEL[c.status]||c.status}</span>
+        </div>
+        <div style="font-size:13px;color:var(--text);line-height:1.6;">${esc(c.content)}</div>
+        ${c.reply_content?`<div style="margin-top:8px;padding:9px 10px;background:var(--bg);border-radius:9px;font-size:12.5px;color:var(--text-secondary);"><b style="color:var(--text);">回复：</b>${esc(c.reply_content)}</div>`:''}
+      </div>`).join(''):emptyState('暂无投诉记录')}
+    <div style="height:10px;"></div>
+  </div></div>`;
+}
+function handleSubmitComplaint(){
+  const content = document.getElementById('complaint-content').value.trim();
+  if(!content){ showToast('请填写投诉/建议内容'); return; }
+  const orderId = complaintTypeChoice==='order' ? (document.getElementById('complaint-order-id')?.value||'') : '';
+  DB.insert('complaint', { complaint_id:genId('CP'), user_id:currentUser.user_id, order_id:orderId||null, type:complaintTypeChoice==='order'?'order':'general', content, status:'pending', reply_content:'', reply_user_id:null, create_time:Date.now(), reply_time:null });
+  showToast('投诉已提交，管理员将尽快处理');
+  refresh();
+}
+
+/* ============================================================
+   宿舍管理员端
+   ============================================================ */
+function buildingOrders(building){
+  const buildingUserIds = DB.get('user_info').filter(u=>u.dorm_building===building).map(u=>u.user_id);
+  return DB.get('repair_order').filter(o=> buildingUserIds.includes(o.user_id) || (o.address && o.address.includes(building)));
+}
+function screen_dorm_overview(){
+  const building = currentUser.dorm_building;
+  const all = buildingOrders(building);
+  const byStatus={}; all.forEach(o=>{ byStatus[o.status]=(byStatus[o.status]||0)+1; });
+  const byFault={}; all.forEach(o=>{ byFault[o.fault_type]=(byFault[o.fault_type]||0)+1; });
+  const topFault = Object.entries(byFault).sort((a,b)=>b[1]-a[1]).slice(0,4);
+  const maxCount = topFault.length?topFault[0][1]:1;
+  return `<div class="screen-scroll">
+    <div class="home-header">
+      <div class="greet">${esc(currentUser.name)}，你好 👋</div>
+      <div class="dorm-chip">${ICON.building}${esc(building)} · 宿舍管理员</div>
+    </div>
+    <div class="section">
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-label">报修总量</div><div class="stat-value" style="color:var(--primary)">${all.length}</div></div>
+        <div class="stat-card"><div class="stat-label">待派单</div><div class="stat-value" style="color:var(--text-secondary)">${byStatus.pending||0}</div></div>
+        <div class="stat-card"><div class="stat-label">维修中</div><div class="stat-value" style="color:var(--warning)">${(byStatus.assigned||0)+(byStatus.repairing||0)}</div></div>
+        <div class="stat-card"><div class="stat-label">已完成</div><div class="stat-value" style="color:var(--success)">${byStatus.completed||0}</div></div>
+      </div>
+    </div>
+    <div class="section" style="padding-top:0;">
+      <div class="card">
+        <div class="section-title" style="margin-bottom:10px;">高频故障类型 TOP${topFault.length}</div>
+        ${topFault.length?topFault.map(([type,count])=>`
+          <div class="bar-row"><span class="bar-label">${esc(type)}</span><div class="bar-track"><div class="bar-fill" style="width:${count/maxCount*100}%;background:${typeColor(type)}"></div></div><span class="bar-count">${count} 条</span></div>
+        `).join(''):emptyState('本楼栋暂无报修记录')}
+      </div>
+    </div>
+    <div class="section" style="padding-top:0;">
+      <div class="cta-repair" onclick="go('register')">
+        <div class="cta-title">${ICON.plus} 协助登记报修</div>
+        <div class="cta-sub">为不便使用系统的同学线下代为登记工单</div>
+        <div class="cta-arrow">${ICON.chevron}</div>
+      </div>
+    </div>
+    <div style="height:14px;"></div>
+  </div>`;
+}
+function screen_orders_dorm(){
+  const building = currentUser.dorm_building;
+  const orders = buildingOrders(building).sort((a,b)=>b.create_time-a.create_time);
+  return `<div class="topnav" style="justify-content:center;"><div class="nav-title" style="position:static;">${esc(building)} 工单列表</div></div>
+  <div class="screen-scroll"><div class="section">
+    ${orders.length?orders.map(o=>ticketCard(o)).join(''):emptyState('暂无工单')}
+  </div></div>`;
+}
+function screen_register(){
+  PHOTO_STATE['register']=PHOTO_STATE['register']||[];
+  return `${topnav('协助登记工单')}
+  <div class="screen-scroll"><div class="section">
+    <div class="card" style="margin-bottom:14px;background:var(--info-light);">
+      <div style="font-size:12.5px;color:#5B3FD6;line-height:1.6;">对应线下登记职能：为不便使用线上系统的学生代为提交报修工单。</div>
+    </div>
+    <div class="field-label">学生姓名 <span class="req">*</span></div>
+    <input type="text" id="reg-name" placeholder="如：韩房佳茵">
+    <div style="height:12px;"></div>
+    <div class="field-label">学生联系方式</div>
+    <input type="text" id="reg-contact" placeholder="手机号">
+    <div style="height:14px;"></div>
+    <div class="field-label">故障类型 <span class="req">*</span></div>
+    <div class="type-grid" id="register-type-grid">
+      ${FAULT_TYPES.map(t=>`<div class="type-item" data-type="${t}" onclick="selectFaultType('register','${t}')"><div class="ic">${typeIcon(t)}</div><span>${t}</span></div>`).join('')}
+    </div>
+    <div style="height:16px;"></div>
+    <div class="field-label">报修地址 <span class="req">*</span></div>
+    <input type="text" id="reg-address" value="${esc(currentUser.dorm_building)} ">
+    <div style="height:14px;"></div>
+    <div class="field-label">故障描述 <span class="req">*</span></div>
+    <textarea id="reg-desc" placeholder="详细描述故障情况…"></textarea>
+    <div style="height:14px;"></div>
+    <div class="switch-row">
+      <div class="field-label" style="margin:0;">是否需要宿管陪同</div>
+      <div class="switch on" id="reg-company-switch" onclick="toggleSwitch('reg-company-switch')"><div class="knob"></div></div>
+    </div>
+    <div style="height:22px;"></div>
+    <button class="btn btn-primary" onclick="handleDormRegister()">代为登记</button>
+    <div style="height:10px;"></div>
+  </div></div>`;
+}
+function handleDormRegister(){
+  const name = document.getElementById('reg-name').value.trim();
+  const contact = document.getElementById('reg-contact').value.trim();
+  const faultType = getSelectedType('register');
+  const address = document.getElementById('reg-address').value.trim();
+  const desc = document.getElementById('reg-desc').value.trim();
+  const company = document.getElementById('reg-company-switch').classList.contains('on');
+  if(!name || !faultType || !address || !desc){ showToast('请完整填写信息'); return; }
+  const order = {
+    order_id:'JD'+Date.now(), user_id:currentUser.user_id, fault_type:faultType,
+    description:`【宿管代登记·${name}${contact?'·'+contact:''}】${desc}`,
+    img_url:'', address, appoint_time:'', need_company:company, status:'pending', create_time:Date.now(),
+    assign_time:null, repair_time:null, complete_time:null, repair_result:'', complete_img:''
+  };
+  DB.insert('repair_order', order);
+  DB.insert('message_push', { push_id:genId('MP'), user_id:'U007', order_id:order.order_id, push_type:'new_order', content:`新工单待派单：${order.order_id}（${order.fault_type}），${order.address}（宿管代登记）。`, push_time:Date.now(), is_read:false });
+  showToast('代登记成功！');
+  back();
+}
+
+/* ============================================================
+   维修人员端
+   ============================================================ */
+function screen_tasks(){
+  const myAssigns = DB.get('assign_record').filter(a=>a.repairman_id===currentUser.user_id);
+  const myOrderIds = myAssigns.map(a=>a.order_id);
+  const tasks = DB.get('repair_order').filter(o=>myOrderIds.includes(o.order_id) && ['assigned','repairing'].includes(o.status)).sort((a,b)=>b.create_time-a.create_time);
+  const skill = getRepairmanSkill(currentUser.user_id);
+  return `<div class="screen-scroll">
+    <div class="home-header">
+      <div class="greet">${esc(currentUser.name)}，你好 🔧</div>
+      <div class="dorm-chip">${ICON.wrench_fill.replace('width="18" height="18"','width="13" height="13"')}技能：${esc(skill?.skill_tag||'—')} · 当前负载 ${skill?.workload||0} 条</div>
+    </div>
+    <div class="section">
+      ${tasks.length?tasks.map(o=>{
+        const student = getUser(o.user_id);
+        const isRepairing = o.status==='repairing';
+        return `<div class="card" style="margin-bottom:12px;">
+          <div class="ticket-top">
+            <div class="ticket-type">
+              <div class="ic" style="background:${typeColor(o.fault_type)}1A;color:${typeColor(o.fault_type)}">${typeIcon(o.fault_type)}</div>
+              <div><div style="font-size:14.5px;font-weight:700;">${esc(o.fault_type)} · ${esc(o.address)}</div><div class="ticket-id">${o.order_id} · ${fmtTime(o.create_time)}</div></div>
+            </div>
+            ${statusBadge(o.status)}
+          </div>
+          <div class="ticket-desc" style="-webkit-line-clamp:3;">${esc(o.description)}</div>
+          <div class="info-card-row"><span class="k">学生联系（脱敏）</span><span class="v">${student?maskPhone(student.contact):'—'}</span></div>
+          <div class="info-card-row"><span class="k">宿管陪同</span><span class="v">${o.need_company?'需要':'不需要'}</span></div>
+          ${o.appoint_time?`<div class="info-card-row"><span class="k">预约时间</span><span class="v">${esc(o.appoint_time.replace('T',' '))}</span></div>`:''}
+          <div style="height:10px;"></div>
+          ${isRepairing
+            ? `<button class="btn btn-primary" onclick="go('repair-record:${o.order_id}')">填写完工记录</button>`
+            : `<button class="btn btn-primary" onclick="handleAcceptOrder('${o.order_id}')">接单确认</button>`}
+        </div>`;
+      }).join(''):`<div class="card" style="text-align:center;color:var(--text-tertiary);font-size:13px;padding:36px 0;">暂无待处理工单，休息一下吧 ☕</div>`}
+    </div>
+    <div style="height:14px;"></div>
+  </div>`;
+}
+function handleAcceptOrder(orderId){
+  confirmDialog('接单确认','确认接单？接单后请尽快上门维修。', ()=>{
+    updateOrderStatus(orderId,'repairing',{ repair_time:Date.now() });
+    showToast('接单成功，请尽快上门！');
+    refresh();
+  });
+}
+
+let materialRows = [{name:'',qty:1}];
+function screen_repair_record(orderId){
+  const order = getOrder(orderId);
+  if(!order) return topnav('填写维修记录')+`<div class="section">${emptyState('工单不存在')}</div>`;
+  materialRows = [{name:'',qty:1}];
+  PHOTO_STATE['repairimg']=[];
+  return `${topnav('填写维修记录')}
+  <div class="screen-scroll"><div class="section">
+    <div class="card" style="margin-bottom:14px;">
+      <div style="font-size:14.5px;font-weight:700;">${esc(order.fault_type)} · ${esc(order.address)}</div>
+      <div class="ticket-id" style="margin-top:3px;">工单号：${orderId}</div>
+    </div>
+    <div class="field-label">维修结果说明 <span class="req">*</span></div>
+    <textarea id="rr-result" placeholder="请详细描述维修过程和处理结果…"></textarea>
+    <div style="height:14px;"></div>
+    <div class="field-label">使用耗材 / 零件</div>
+    <div id="rr-materials">${materialRowsHtml()}</div>
+    <div class="chip" style="display:inline-flex;margin-top:2px;" onclick="addMaterialRow()">${ICON.plus} 添加耗材</div>
+    <div style="height:16px;"></div>
+    <div class="field-label">完工照片（可选）</div>
+    ${uploadGridHtml('repairimg', PHOTO_STATE['repairimg'])}
+    <div style="height:22px;"></div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" style="background:var(--warning-light);color:#B5740E;" onclick="handleRepairReject('${orderId}')">标记无法维修</button>
+      <button class="btn btn-primary" onclick="handleRepairComplete('${orderId}')">提交完工</button>
+    </div>
+    <div style="height:10px;"></div>
+  </div></div>`;
+}
+function materialRowsHtml(){
+  return materialRows.map((m,i)=>`<div class="mat-row">
+    <input type="text" placeholder="耗材名称" value="${esc(m.name)}" oninput="materialRows[${i}].name=this.value">
+    <input type="number" class="mat-qty" min="1" value="${m.qty}" oninput="materialRows[${i}].qty=parseInt(this.value)||1">
+    ${materialRows.length>1?`<div class="mat-del" onclick="removeMaterialRow(${i})">×</div>`:'<div style="width:36px;flex:0 0 36px;"></div>'}
+  </div>`).join('');
+}
+function addMaterialRow(){ materialRows.push({name:'',qty:1}); document.getElementById('rr-materials').innerHTML = materialRowsHtml(); }
+function removeMaterialRow(i){ materialRows.splice(i,1); document.getElementById('rr-materials').innerHTML = materialRowsHtml(); }
+function handleRepairReject(orderId){
+  const result = document.getElementById('rr-result').value.trim();
+  if(!result){ showToast('请先填写维修结果说明'); return; }
+  confirmDialog('标记无法维修','确认标记为无法维修？系统将通知管理员重新派单。', ()=>{
+    updateOrderStatus(orderId,'rejected',{ repair_result:result });
+    showToast('已标记无法维修，管理员将重新派单');
+    back();
+  }, true);
+}
+function handleRepairComplete(orderId){
+  const result = document.getElementById('rr-result').value.trim();
+  if(!result){ showToast('请填写维修结果说明'); return; }
+  materialRows.filter(m=>m.name.trim()).forEach(m=>{
+    DB.insert('material_usage', { record_id:genId('MU'), order_id:orderId, material_name:m.name.trim(), quantity:m.qty||1, use_time:Date.now() });
+  });
+  updateOrderStatus(orderId,'to_evaluate',{ repair_result:result, repair_time: getOrder(orderId).repair_time||Date.now(), complete_time:Date.now() });
+  showToast('维修记录已提交！');
+  back();
+}
+
+function screen_history(){
+  const myAssigns = DB.get('assign_record').filter(a=>a.repairman_id===currentUser.user_id);
+  const myOrderIds = myAssigns.map(a=>a.order_id);
+  const orders = DB.get('repair_order').filter(o=>myOrderIds.includes(o.order_id) && !['pending','assigned'].includes(o.status)).sort((a,b)=>b.create_time-a.create_time);
+  return `<div class="topnav" style="justify-content:center;"><div class="nav-title" style="position:static;">我的维修记录</div></div>
+  <div class="screen-scroll"><div class="section">
+    ${orders.length?orders.map(o=>ticketCard(o,{extra: o.repair_result?`<div style="margin-top:8px;font-size:12px;color:var(--text-tertiary);border-top:1px solid var(--border);padding-top:8px;">维修结果：${esc(o.repair_result.slice(0,28))}${o.repair_result.length>28?'…':''}</div>`:''})).join(''):emptyState('暂无历史记录')}
+  </div></div>`;
+}
+
+function screen_schedule(){
+  const skill = getRepairmanSkill(currentUser.user_id) || {skill_tag:'',workload:0,schedule:''};
+  return `${topnav('排班与技能管理')}
+  <div class="screen-scroll"><div class="section">
+    <div class="field-label">技能专长</div>
+    <select id="sch-skill">${FAULT_TYPES.filter(t=>t!=='其他').map(t=>`<option ${skill.skill_tag===t?'selected':''}>${t}</option>`).join('')}</select>
+    <div style="height:14px;"></div>
+    <div class="field-label">当前工单负载</div>
+    <input type="text" value="${skill.workload} 条" disabled style="color:var(--text-tertiary);background:var(--bg);">
+    <div style="height:14px;"></div>
+    <div class="field-label">可维修时间段</div>
+    <input type="text" id="sch-schedule" value="${esc(skill.schedule)}" placeholder="如：周一至周五 08:00-17:00">
+    <div style="height:22px;"></div>
+    <button class="btn btn-primary" onclick="handleSaveSchedule()">保存</button>
+    <div style="height:10px;"></div>
+  </div></div>`;
+}
+function handleSaveSchedule(){
+  const skill = document.getElementById('sch-skill').value;
+  const schedule = document.getElementById('sch-schedule').value.trim();
+  DB.update('repairman_skill','repairman_id',currentUser.user_id,{ skill_tag:skill, schedule });
+  showToast('排班信息已保存');
+  back();
+}
+
+/* ============================================================
+   系统管理员端
+   ============================================================ */
+function screen_assign(){
+  const orders = DB.get('repair_order').filter(o=>o.status==='pending'||o.status==='rejected').sort((a,b)=>b.create_time-a.create_time);
+  return `<div class="screen-scroll">
+    <div class="home-header">
+      <div class="greet">${esc(currentUser.name)}，你好 ⚙️</div>
+      <div class="dorm-chip">${ICON.send.replace('width="22" height="22"','width="13" height="13"')}待派单 ${orders.length} 条</div>
+    </div>
+    <div class="section">
+      ${orders.length?orders.map(o=>`
+        <div class="card" style="margin-bottom:12px;">
+          <div class="ticket-top">
+            <div class="ticket-type">
+              <div class="ic" style="background:${typeColor(o.fault_type)}1A;color:${typeColor(o.fault_type)}">${typeIcon(o.fault_type)}</div>
+              <div><div style="font-size:14.5px;font-weight:700;">${esc(o.fault_type)} · ${esc(o.address)}</div><div class="ticket-id">${o.order_id} · ${esc(getUserName(o.user_id))}</div></div>
+            </div>
+            ${statusBadge(o.status)}
+          </div>
+          <div class="ticket-desc" style="-webkit-line-clamp:2;">${esc(o.description)}</div>
+          <div class="ticket-meta" style="margin-bottom:10px;"><span>${fmtTime(o.create_time)}</span><span></span></div>
+          <button class="btn btn-primary btn-sm" onclick="openAssignModal('${o.order_id}','${o.fault_type}')">派单</button>
+        </div>`).join(''):`<div class="card" style="text-align:center;color:var(--text-tertiary);font-size:13px;padding:36px 0;">暂无待派单工单 🎉</div>`}
+    </div>
+    <div style="height:14px;"></div>
+  </div>`;
+}
+function openAssignModal(orderId, faultType){
+  const candidates = getSmartCandidates(faultType);
+  const html = candidates.map((c,i)=>`
+    <div class="cand-row ${i===0?'rec':''}">
+      <div>
+        <div class="cand-name">${esc(c.name)} <span class="cand-tag">${esc(c.skill_tag)}</span> ${i===0?`<span class="cand-rec-tag">${ICON.sparkle}智能推荐</span>`:''}</div>
+        <div class="cand-meta">当前负载：${c.workload} 条 · 排班：${esc(c.schedule||'—')} · 评分 ${c.avg_score||'—'}</div>
+      </div>
+      <button class="btn btn-primary btn-sm" style="width:auto;padding:0 14px;" onclick="handleDoAssign('${orderId}','${c.repairman_id}',${i===0})">指定</button>
+    </div>`).join('');
+  showModal({
+    title: `派单 · ${orderId}（${faultType}）`,
+    bodyHtml: `<div style="text-align:left;max-height:340px;overflow-y:auto;margin-top:6px;">
+      <div style="font-size:12px;font-weight:700;color:var(--text-tertiary);margin-bottom:8px;">🤖 匹配推荐（按负载排序）</div>
+      ${html || emptyState('暂无匹配技能的维修人员')}
+    </div>`,
+    onOk: null, hideCancel:false, cancelText:'取消', wide:true,
+  });
+}
+function handleDoAssign(orderId, repairmanId, isAuto){
+  assignOrder(orderId, repairmanId, isAuto);
+  closeModal();
+  showToast('派单成功！');
+  refresh();
+}
+
+let workbenchTab = 'complaint';
+function screen_workbench(){
+  return `<div class="topnav" style="justify-content:center;"><div class="nav-title" style="position:static;">工作台</div></div>
+  <div class="section" style="padding-bottom:6px;">
+    <div class="mini-seg">
+      <div class="ms-item ${workbenchTab==='complaint'?'active':''}" onclick="workbenchTab='complaint';refresh();">投诉处理</div>
+      <div class="ms-item ${workbenchTab==='notice'?'active':''}" onclick="workbenchTab='notice';refresh();">通知公告</div>
+    </div>
+  </div>
+  <div class="screen-scroll"><div class="section" style="padding-top:0;">
+    ${workbenchTab==='complaint'?workbenchComplaintHtml():workbenchNoticeHtml()}
+  </div></div>`;
+}
+function workbenchComplaintHtml(){
+  const complaints = DB.get('complaint').slice().sort((a,b)=>b.create_time-a.create_time);
+  if(!complaints.length) return emptyState('暂无投诉/建议');
+  return complaints.map(c=>`
+    <div class="card" style="margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
+        <span style="font-size:11.5px;color:var(--text-tertiary);">${esc(getUserName(c.user_id))} · ${fmtDate(c.create_time)} · ${c.type==='order'?('工单 '+c.order_id):'系统建议'}</span>
+        <span class="badge ${c.status==='resolved'?'badge-completed':c.status==='closed'?'badge-cancelled':'badge-pending'}">${COMPLAINT_STATUS_LABEL[c.status]||c.status}</span>
+      </div>
+      <div style="font-size:13px;color:var(--text);line-height:1.6;margin-bottom:8px;">${esc(c.content)}</div>
+      ${c.reply_content?`<div style="padding:9px 10px;background:var(--bg);border-radius:9px;font-size:12.5px;color:var(--text-secondary);margin-bottom:8px;"><b style="color:var(--text);">已回复：</b>${esc(c.reply_content)}</div>`:''}
+      <button class="btn btn-outline btn-sm" style="width:auto;padding:0 14px;" onclick="openComplaintReplyModal('${c.complaint_id}')">${c.reply_content?'修改处理':'处理'}</button>
+    </div>`).join('');
+}
+function openComplaintReplyModal(complaintId){
+  const c = DB.get('complaint').find(c=>c.complaint_id===complaintId);
+  if(!c) return;
+  const opts = ['pending','processing','resolved','closed'];
+  showModal({
+    title:`处理投诉 · ${complaintId}`,
+    bodyHtml:`<div style="text-align:left;margin-top:6px;">
+      <div style="font-size:12.5px;color:var(--text-secondary);margin-bottom:10px;line-height:1.6;">${esc(c.content)}</div>
+      <div class="field-label">处理状态</div>
+      <select id="cr-status">${opts.map(o=>`<option value="${o}" ${c.status===o?'selected':''}>${COMPLAINT_STATUS_LABEL[o]}</option>`).join('')}</select>
+      <div style="height:10px;"></div>
+      <div class="field-label">回复内容</div>
+      <textarea id="cr-reply" style="min-height:70px;">${esc(c.reply_content)}</textarea>
+    </div>`,
+    okText:'保存', wide:true,
+    onOk: ()=>{
+      const status = document.getElementById('cr-status').value;
+      const reply = document.getElementById('cr-reply').value.trim();
+      DB.update('complaint','complaint_id',complaintId,{ status, reply_content:reply, reply_user_id:currentUser.user_id, reply_time:Date.now() });
+      if(reply) DB.insert('message_push',{ push_id:genId('MP'), user_id:c.user_id, order_id:c.order_id||null, push_type:'complaint_reply', content:`您提交的投诉/建议已收到回复：${reply.slice(0,40)}${reply.length>40?'…':''}`, push_time:Date.now(), is_read:false });
+      showToast('处理结果已保存');
+      refresh();
+    }
+  });
+}
+function workbenchNoticeHtml(){
+  const notices = DB.get('notice').slice().sort((a,b)=>b.publish_time-a.publish_time);
+  const roleLabels={all:'全体',student:'学生',dorm_admin:'宿管',repairman:'维修人员',admin:'管理员'};
+  return `
+    <div class="card" style="margin-bottom:14px;">
+      <div class="section-title" style="margin-bottom:8px;">发布新公告</div>
+      <div class="field-label">标题 <span class="req">*</span></div>
+      <input type="text" id="nt-title" placeholder="公告标题">
+      <div style="height:12px;"></div>
+      <div class="field-label">内容 <span class="req">*</span></div>
+      <textarea id="nt-content" placeholder="公告正文…"></textarea>
+      <div style="height:12px;"></div>
+      <div class="field-label">目标角色</div>
+      <select id="nt-target">
+        <option value="all">全体</option><option value="student">学生</option><option value="dorm_admin">宿管</option><option value="repairman">维修人员</option><option value="admin">管理员</option>
+      </select>
+      <div style="height:14px;"></div>
+      <button class="btn btn-primary" onclick="handlePublishNotice()">发布公告</button>
+    </div>
+    <div class="section-title" style="padding:0 2px;">已发布公告</div>
+    ${notices.length?notices.map(n=>`
+      <div class="card" style="margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:14px;font-weight:700;color:var(--text);">${esc(n.title)}</div>
+            <div style="font-size:11.5px;color:var(--text-tertiary);margin:3px 0 6px;">${fmtTime(n.publish_time)} · 目标：${roleLabels[n.target_role]||n.target_role}</div>
+            <div style="font-size:12.5px;color:var(--text-secondary);line-height:1.6;">${esc(n.content)}</div>
+          </div>
+          <span class="badge ${n.status==='active'?'badge-completed':'badge-cancelled'}">${n.status==='active'?'已发布':'已撤回'}</span>
+        </div>
+        <div style="height:8px;"></div>
+        ${n.status==='active'
+          ? `<button class="btn btn-ghost btn-sm" style="width:auto;padding:0 14px;" onclick="handleToggleNotice('${n.notice_id}','inactive')">撤回</button>`
+          : `<button class="btn btn-primary btn-sm" style="width:auto;padding:0 14px;" onclick="handleToggleNotice('${n.notice_id}','active')">重新发布</button>`}
+      </div>`).join(''):emptyState('暂无公告')}
+  `;
+}
+function handlePublishNotice(){
+  const title = document.getElementById('nt-title').value.trim();
+  const content = document.getElementById('nt-content').value.trim();
+  const target = document.getElementById('nt-target').value;
+  if(!title || !content){ showToast('请填写标题和内容'); return; }
+  DB.insert('notice', { notice_id:genId('NT'), publisher_id:currentUser.user_id, title, content, target_role:target, publish_time:Date.now(), status:'active' });
+  showToast('公告已发布！');
+  refresh();
+}
+function handleToggleNotice(noticeId, status){
+  DB.update('notice','notice_id',noticeId,{ status });
+  showToast(status==='active'?'公告已重新发布':'公告已撤回');
+  refresh();
+}
+
+function screen_staff_status(){
+  const skills = DB.get('repairman_skill').slice().sort((a,b)=>(b.avg_score||0)-(a.avg_score||0));
+  return `${topnav('维修人员状态')}
+  <div class="screen-scroll"><div class="section">
+    <div class="card" style="margin-bottom:12px;background:var(--bg);box-shadow:none;">
+      <div style="font-size:12px;color:var(--text-tertiary);line-height:1.6;">只读概览，便于外出时快速查看负载与评分；新增/编辑人员请在网页管理端操作。</div>
+    </div>
+    ${skills.map((s,i)=>{
+      const u = getUser(s.repairman_id);
+      return `<div class="staff-row">
+        <div>
+          <div class="sr-name">${i<3?['🥇','🥈','🥉'][i]+' ':''}${esc(u?u.name:s.repairman_id)} <span class="cand-tag">${esc(s.skill_tag)}</span></div>
+          <div class="sr-sub">负载 ${s.workload}/5 · ${esc(s.schedule||'—')}</div>
+        </div>
+        <div class="sr-score">${s.avg_score?s.avg_score.toFixed(1):'—'}★</div>
+      </div>`;
+    }).join('')}
+  </div></div>`;
+}
+
+/* ============================================================
+   共享：消息中心 / 公告详情 / 个人中心
+   ============================================================ */
+const PUSH_ICON = {
+  new_order:'send', assigned:'wrench_fill', repairing:'wrench_fill', evaluate_remind:'bell_fill',
+  status_change:'bell_fill', complaint_reply:'reply_fill', notice:'notice_fill'
+};
+const PUSH_COLOR = {
+  new_order:'#2F6FED', assigned:'#7C5CFC', repairing:'#2F6FED', evaluate_remind:'#0E8A78',
+  status_change:'#6B7280', complaint_reply:'#16834A', notice:'#B5740E'
+};
+function screen_messages(){
+  const msgs = DB.get('message_push').filter(m=>m.user_id===currentUser.user_id).sort((a,b)=>b.push_time-a.push_time);
+  return `<div class="topnav" style="justify-content:center;">
+    <div class="nav-title" style="position:static;">消息通知</div>
+    ${msgs.some(m=>!m.is_read)?`<div class="nav-right" style="position:absolute;right:10px;"><span class="nav-right-text" onclick="handleMarkAllRead()">全部已读</span></div>`:''}
+  </div>
+  <div class="screen-scroll">
+    ${msgs.length?msgs.map(m=>`
+      <div class="msg-row" onclick="handleOpenMessage('${m.push_id}')">
+        ${!m.is_read?'<div class="unread-dot"></div>':''}
+        <div class="msg-icon" style="background:${PUSH_COLOR[m.push_type]||'#6B7280'}1A;color:${PUSH_COLOR[m.push_type]||'#6B7280'}">${ICON[PUSH_ICON[m.push_type]]||ICON.bell_fill}</div>
+        <div class="msg-body">
+          <div class="msg-top"><span class="msg-title">${esc(pushTitle(m.push_type))}</span><span class="msg-time">${fmtTime(m.push_time)}</span></div>
+          <div class="msg-content">${esc(m.content)}</div>
+        </div>
+      </div>`).join(''):`<div style="padding-top:40px;">${emptyState('暂无消息')}</div>`}
+  </div>`;
+}
+function pushTitle(t){
+  return {new_order:'新工单提醒', assigned:'派单提醒', repairing:'维修进度更新', evaluate_remind:'邀请评价', status_change:'工单状态更新', complaint_reply:'投诉回复', notice:'系统公告'}[t]||'系统消息';
+}
+function handleMarkAllRead(){
+  DB.get('message_push').filter(m=>m.user_id===currentUser.user_id && !m.is_read).forEach(m=>DB.update('message_push','push_id',m.push_id,{is_read:true}));
+  showToast('全部已读');
+  refresh();
+}
+function handleOpenMessage(pushId){
+  const m = DB.get('message_push').find(m=>m.push_id===pushId);
+  if(!m) return;
+  DB.update('message_push','push_id',pushId,{is_read:true});
+  if(m.order_id && getOrder(m.order_id)){ go('order-detail:'+m.order_id); }
+  else { refresh(); }
+}
+
+function screen_notice_detail(noticeId){
+  const n = DB.get('notice').find(n=>n.notice_id===noticeId);
+  if(!n) return topnav('公告详情')+`<div class="section">${emptyState('公告不存在')}</div>`;
+  return `${topnav('公告详情')}
+  <div class="screen-scroll"><div class="section">
+    <div class="card">
+      <div style="font-size:16px;font-weight:700;color:var(--text);line-height:1.5;">${esc(n.title)}</div>
+      <div style="font-size:12px;color:var(--text-tertiary);margin:8px 0 14px;">发布时间：${fmtTime(n.publish_time)}</div>
+      <div style="font-size:14px;color:var(--text-secondary);line-height:1.8;">${esc(n.content)}</div>
+    </div>
+  </div></div>`;
+}
+
+/* ---------------- 我的（个人中心，角色相关入口） ---------------- */
+function profileEntries(role){
+  if(role==='student') return [
+    {icon:'list', label:'我的工单', action:"switchTab('orders')"},
+    {icon:'feedback', label:'投诉与建议', action:"go('complaint')"},
+    {icon:'bell_o', label:'消息通知', action:"switchTab('messages')"},
+  ];
+  if(role==='dorm_admin') return [
+    {icon:'plus', label:'协助登记报修', action:"go('register')"},
+    {icon:'list', label:'楼栋工单', action:"switchTab('orders')"},
+    {icon:'bell_o', label:'消息通知', action:"switchTab('messages')"},
+  ];
+  if(role==='repairman') return [
+    {icon:'calendar', label:'排班与技能管理', action:"go('schedule')"},
+    {icon:'list', label:'我的维修记录', action:"switchTab('history')"},
+    {icon:'bell_o', label:'消息通知', action:"switchTab('messages')"},
+  ];
+  return [
+    {icon:'people_o', label:'维修人员状态', action:"go('staff-status')"},
+    {icon:'send', label:'待派单工单', action:"switchTab('assign')"},
+    {icon:'work_o', label:'工作台（投诉/公告）', action:"switchTab('workbench')"},
+    {icon:'bell_o', label:'消息通知', action:"switchTab('messages')"},
+  ];
+}
+function screen_profile(){
+  const u = currentUser;
+  const entries = profileEntries(u.role);
+  return `<div class="screen-scroll">
+    <div class="profile-header">
+      <div class="avatar">${esc(u.name[0])}</div>
+      <div>
+        <div class="profile-name">${esc(u.name)}　<span class="badge badge-assigned">${roleName(u.role)}</span></div>
+        <div class="profile-sub">${u.user_id} ${u.dorm_building?'· '+esc(u.dorm_building):''}</div>
+      </div>
+    </div>
+    <div class="section" style="padding-top:10px;">
+      <div class="card">
+        <div class="info-card-row"><span class="k">联系方式</span><span class="v">${maskPhone(u.contact)}</span></div>
+        ${u.role==='repairman'?(()=>{const s=getRepairmanSkill(u.user_id);return `<div class="info-card-row"><span class="k">技能专长</span><span class="v">${esc(s?.skill_tag||'—')}</span></div><div class="info-card-row"><span class="k">综合评分</span><span class="v">${s?.avg_score?s.avg_score.toFixed(1)+'★':'—'}</span></div>`;})():''}
+      </div>
+    </div>
+    <div class="section" style="padding-top:0;">
+      <div class="card" style="padding:0;overflow:hidden;">
+        ${entries.map(e=>`<div class="list-row" onclick="${e.action}">
+          <div class="lr-left"><span style="color:var(--text-secondary);">${ICON[e.icon]}</span><span class="lr-text">${e.label}</span></div>
+          <span class="lr-chevron">${ICON.chevron}</span>
+        </div>`).join('')}
+        <div class="list-row" onclick="showAboutModal()">
+          <div class="lr-left"><span style="color:var(--text-secondary);">${ICON.about}</span><span class="lr-text">关于系统</span></div>
+          <span class="lr-chevron">${ICON.chevron}</span>
+        </div>
+      </div>
+    </div>
+    <div class="section" style="padding-top:0;">
+      <button class="btn" style="background:var(--danger-light);color:var(--danger);" onclick="handleLogoutConfirm()">${ICON.logout} 退出登录</button>
+    </div>
+    <div style="height:14px;"></div>
+  </div>`;
+}
+function showAboutModal(){
+  showModal({ title:'关于本系统', bodyHtml:`<div class="modal-msg">吉林大学宿舍报修系统 · 移动端高保真原型<br>信息系统分析与设计课程项目演示用，数据均为模拟数据。<br><br>5组 · 组长 薛楚滢 35241509<br>组员 侯博文 黄治桦 比努尔·阿曼太</div>`, hideCancel:true, okText:'我知道了', onOk:()=>{} });
+}
+function handleLogoutConfirm(){
+  confirmDialog('退出登录','确认退出当前账号并返回登录页？', ()=>{ doLogout(); }, true);
+}
+
+/* ============================================================
+   屏幕路由表
+   ============================================================ */
+const SCREEN_RENDERERS = {
+  'login': screen_login,
+  'home': screen_home,
+  'overview': screen_dorm_overview,
+  'tasks': screen_tasks,
+  'assign': screen_assign,
+  'orders': screen_orders,
+  'history': screen_history,
+  'workbench': screen_workbench,
+  'messages': screen_messages,
+  'profile': screen_profile,
+  'submit': screen_submit,
+  'register': screen_register,
+  'schedule': screen_schedule,
+  'complaint': screen_complaint,
+  'staff-status': screen_staff_status,
+  'order-detail': screen_order_detail,
+  'evaluate': screen_evaluate,
+  'repair-record': screen_repair_record,
+  'notice-detail': screen_notice_detail,
+};
+
+/* ============================================================
+   初始化
+   ============================================================ */
+function init(){
+  tryRestoreSession();
+  if(currentUser){ navStack=[TABS[currentUser.role][0].key]; }
+  else { navStack=['login']; }
+  showStack();
+  setClock();
+}
+function setClock(){
+  const d=new Date();
+  document.getElementById('clock').textContent = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+init();
+
+</script>
+</body>
+</html>
