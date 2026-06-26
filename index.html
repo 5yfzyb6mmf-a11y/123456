@@ -6,7 +6,6 @@
   <title>吉林大学宿舍报修系统</title>
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -23,8 +22,8 @@
     <div class="top-nav-right">
       <span id="nav-user-info"></span>
       <button id="btn-switch-role" class="nav-btn">切换身份</button>
-      <button id="btn-msg" class="icon-btn nav-msg-btn">
-        🔔<span id="msg-badge" class="msg-badge hidden">0</span>
+      <button id="btn-msg" class="nav-btn nav-btn-ghost" style="position:relative">
+        消息<span id="msg-badge" class="msg-badge hidden">0</span>
       </button>
       <button id="btn-logout" class="nav-btn nav-btn-ghost">退出</button>
     </div>

@@ -6,9 +6,9 @@
 <title>吉林大学宿舍报修系统 - 移动端原型</title>
 <style>
 :root{
-  --primary:#2F6FED;
-  --primary-dark:#1E54C4;
-  --primary-light:#E8F0FE;
+  --primary:#1A4F9C;
+  --primary-dark:#123E7D;
+  --primary-light:#E8EEF8;
   --success:#1FAA59;
   --success-light:#E6F7ED;
   --warning:#F5A623;
@@ -281,11 +281,11 @@ textarea:focus, input:focus{outline:none;border-color:var(--primary);}
 
 /* ============ 首页专属 ============ */
 .home-header{padding:18px 16px 4px;}
-.greet{font-size:20px;font-weight:700;color:var(--text);}
+.greet{font-size:20px;font-weight:800;color:#1A4F9C;letter-spacing:.06em;}
 .dorm-chip{display:inline-flex;align-items:center;gap:5px;margin-top:6px;font-size:12.5px;color:var(--text-secondary);background:#fff;padding:5px 10px;border-radius:8px;}
 .cta-repair{
   margin:14px 16px 0;border-radius:18px;padding:20px;
-  background:linear-gradient(135deg,#2F6FED,#5B8DF8);color:#fff;position:relative;overflow:hidden;
+  background:linear-gradient(135deg,#1A4F9C,#2D6FBF);color:#fff;position:relative;overflow:hidden;
   cursor:pointer;-webkit-tap-highlight-color:transparent;
 }
 .cta-repair::after{content:'';position:absolute;right:-30px;top:-30px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.10);}
@@ -335,8 +335,8 @@ textarea:focus, input:focus{outline:none;border-color:var(--primary);}
 /* ============ 登录页 ============ */
 .login-screen{justify-content:flex-start;}
 .login-top{padding:64px 30px 24px;display:flex;flex-direction:column;align-items:center;}
-.login-badge{width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,#2F6FED,#5B8DF8);display:flex;align-items:center;justify-content:center;margin-bottom:16px;}
-.login-title{font-size:20px;font-weight:700;color:var(--text);}
+.login-badge{width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,#1A4F9C,#2D6FBF);display:flex;align-items:center;justify-content:center;margin-bottom:16px;}
+.login-title{font-size:20px;font-weight:800;color:#1A4F9C;letter-spacing:.06em;}
 .login-sub{font-size:12.5px;color:var(--text-tertiary);margin-top:5px;}
 .login-form{padding:6px 28px;display:flex;flex-direction:column;gap:14px;}
 .login-form label{font-size:12.5px;color:var(--text-secondary);margin-bottom:6px;display:block;font-weight:500;}
@@ -501,6 +501,14 @@ function typeColor(t){
 const STATUS_LABEL = { pending:'待派单', assigned:'已派单', repairing:'维修中', to_evaluate:'待评价', completed:'已完成', rejected:'已退回', cancelled:'已取消' };
 const STATUS_BADGE  = { pending:'badge-pending', assigned:'badge-assigned', repairing:'badge-repairing', to_evaluate:'badge-evaluate', completed:'badge-completed', rejected:'badge-rejected', cancelled:'badge-cancelled' };
 const FAULT_TYPES = ['水电','家具','网络','空调','门窗','卫浴','其他'];
+const DORM_BUILDINGS = [
+  '南苑一公寓','南苑二公寓','南苑三公寓','南苑四公寓',
+  '南苑五公寓A座','南苑五公寓B座','南苑五公寓C座',
+  '南苑六公寓','南苑七公寓','南苑八公寓','南苑九公寓',
+  '文苑一公寓','文苑二公寓','文苑三公寓','文苑四公寓',
+  '文苑五公寓','文苑六公寓','文苑七公寓','文苑八公寓','文苑九公寓',
+  '北苑一公寓','北苑二公寓','大学城二公寓','大学城三公寓',
+];
 const COMPLAINT_STATUS_LABEL = { pending:'待处理', processing:'处理中', resolved:'已解决', closed:'已关闭' };
 const ROLE_LABEL = { student:'学生', dorm_admin:'宿舍管理员', repairman:'维修人员', admin:'系统管理员' };
 const ROLE_ICON  = { student:'role_student', dorm_admin:'role_dorm', repairman:'role_repair', admin:'role_admin' };
@@ -519,18 +527,19 @@ function esc(s){ return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</
 function createSeedData(){
   return {
     user_info: [
-      { user_id:'U001', name:'韩房佳茵', role:'student',    contact:'13800138001', dorm_building:'知新楼', password:'123456' },
-      { user_id:'U002', name:'李明阳',   role:'student',    contact:'13800138002', dorm_building:'励学楼', password:'123456' },
-      { user_id:'U003', name:'王璐曜',   role:'dorm_admin', contact:'13800138003', dorm_building:'知新楼', password:'123456' },
-      { user_id:'U004', name:'周天临',   role:'repairman',  contact:'13800138004', dorm_building:'',       password:'123456' },
-      { user_id:'U005', name:'张国强',   role:'repairman',  contact:'13800138005', dorm_building:'',       password:'123456' },
-      { user_id:'U006', name:'刘明泽',   role:'repairman',  contact:'13800138006', dorm_building:'',       password:'123456' },
-      { user_id:'U007', name:'余锐新',   role:'admin',      contact:'13800138007', dorm_building:'',       password:'123456' },
+      { user_id:'U001', name:'韩房佳茵', role:'student',    contact:'13800138001', dorm_building:'南苑三公寓', password:'123456' },
+      { user_id:'U002', name:'李明阳',   role:'student',    contact:'13800138002', dorm_building:'文苑二公寓', password:'123456' },
+      { user_id:'U008', name:'薛楚滢',   role:'student',    contact:'13800138008', dorm_building:'南苑二公寓', password:'123456' },
+      { user_id:'U003', name:'王璐曜',   role:'dorm_admin', contact:'13800138003', dorm_building:'南苑三公寓', password:'123456' },
+      { user_id:'U004', name:'周天临',   role:'repairman',  contact:'13800138004', dorm_building:'',            password:'123456' },
+      { user_id:'U005', name:'张国强',   role:'repairman',  contact:'13800138005', dorm_building:'',            password:'123456' },
+      { user_id:'U006', name:'刘明泽',   role:'repairman',  contact:'13800138006', dorm_building:'',            password:'123456' },
+      { user_id:'U007', name:'余锐新',   role:'admin',      contact:'13800138007', dorm_building:'',            password:'123456' },
     ],
     repairman_skill: [
-      { repairman_id:'U004', skill_tag:'水电', workload:2, schedule:'周一至周五 08:00-17:00', avg_score:4.6 },
-      { repairman_id:'U005', skill_tag:'家具', workload:1, schedule:'周一至周六 09:00-18:00', avg_score:4.3 },
-      { repairman_id:'U006', skill_tag:'空调', workload:3, schedule:'周二至周日 08:00-16:00', avg_score:4.8 },
+      { repairman_id:'U004', skill_tag:'水电', workload:2, schedule:'周一至周五 08:00-17:00', avg_score:4.6, area:'南苑片区' },
+      { repairman_id:'U005', skill_tag:'家具', workload:1, schedule:'周一至周六 09:00-18:00', avg_score:4.3, area:'文苑片区' },
+      { repairman_id:'U006', skill_tag:'空调', workload:3, schedule:'周二至周日 08:00-16:00', avg_score:4.8, area:'北苑片区' },
     ],
     repair_order: [
       { order_id:'JD10001', user_id:'U001', fault_type:'水电', description:'宿舍洗手间水龙头漏水，已影响正常使用，请尽快派人维修。', img_url:'', address:'知新楼 301室', appoint_time:'', need_company:false, status:'completed', create_time:ts(10), assign_time:ts(9), repair_time:ts(8), complete_time:ts(7), repair_result:'更换了水龙头密封圈，漏水问题已解决。', complete_img:'' },
@@ -937,7 +946,7 @@ function screen_login(){
       <button class="btn btn-primary" style="margin-top:6px;" onclick="doLogin(document.getElementById('login-user-select').value)">登录系统</button>
       `:`<div style="text-align:center;color:var(--text-tertiary);font-size:12.5px;padding:10px 0;">请选择上方身份后选择演示账号登录</div>`}
       <div style="text-align:center;margin-top:18px;">
-        <span style="font-size:12px;color:var(--text-tertiary);text-decoration:underline;cursor:pointer;" onclick="handleResetDemo()">⚠ 重置演示数据</span>
+        <span style="font-size:12px;color:var(--text-tertiary);text-decoration:underline;cursor:pointer;" onclick="handleResetDemo()">重置演示数据</span>
       </div>
     </div>
   </div>`;
@@ -1010,8 +1019,14 @@ function screen_submit(){
         ${FAULT_TYPES.map(t=>`<div class="type-item" data-type="${t}" onclick="selectFaultType('submit','${t}')"><div class="ic">${typeIcon(t)}</div><span>${t}</span></div>`).join('')}
       </div>
       <div style="height:16px;"></div>
-      <div class="field-label">报修地址 <span class="req">*</span></div>
-      <input type="text" id="submit-address" value="${esc(u.dorm_building)} " placeholder="楼号+房间号">
+      <div class="field-label">寝室楼 <span class="req">*</span></div>
+      <select id="submit-building" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;background:#fff;color:var(--text);">
+        <option value="">请选择寝室楼</option>
+        ${DORM_BUILDINGS.map(b=>`<option value="${b}" ${b===u.dorm_building?'selected':''}>${b}</option>`).join('')}
+      </select>
+      <div style="height:10px;"></div>
+      <div class="field-label">寝室门牌号 <span class="req">*</span></div>
+      <input type="text" id="submit-room" placeholder="如 301室、402">
       <div style="height:14px;"></div>
       <div class="field-label">故障描述 <span class="req">*</span></div>
       <textarea id="submit-desc" placeholder="请详细描述故障情况，便于维修人员准备工具和零件…"></textarea>
@@ -1043,11 +1058,13 @@ function getSelectedType(scope){
 }
 function handleSubmitOrder(){
   const faultType = getSelectedType('submit');
-  const address = document.getElementById('submit-address').value.trim();
+  const building = document.getElementById('submit-building')?.value;
+  const room     = document.getElementById('submit-room')?.value.trim();
+  const address  = building && room ? `${building} ${room}` : (building||room||'');
   const desc = document.getElementById('submit-desc').value.trim();
   const appoint = document.getElementById('submit-appoint').value;
   const company = document.getElementById('submit-company-switch').classList.contains('on');
-  if(!faultType || !address || !desc){ showToast('请完整填写故障类型、地址和描述'); return; }
+  if(!faultType || !building || !room || !desc){ showToast('请完整填写故障类型、寝室楼、门牌号和描述'); return; }
   const order = {
     order_id:'JD'+Date.now(), user_id:currentUser.user_id, fault_type:faultType, description:desc,
     img_url:'', address, appoint_time:appoint, need_company:company, status:'pending', create_time:Date.now(),
@@ -1097,7 +1114,7 @@ function screen_order_detail(orderId){
       <div class="info-card-row"><span class="k">姓名</span><span class="v">${esc(repairman.name)}</span></div>
       <div class="info-card-row"><span class="k">联系方式</span><span class="v">${maskPhone(repairman.contact)}</span></div>
       <div class="info-card-row"><span class="k">技能专长</span><span class="v">${esc(getRepairmanSkill(repairman.user_id)?.skill_tag||'—')}</span></div>
-      <div class="info-card-row"><span class="k">派单方式</span><span class="v">${assign.is_auto?'🤖 智能推荐':'👤 人工指定'}</span></div>
+      <div class="info-card-row"><span class="k">派单方式</span><span class="v">${assign.is_auto?'智能推荐':'人工指定'}</span></div>
     </div>`:''}
     ${order.repair_result ? `<div class="card" style="margin-bottom:12px;">
       <div class="section-title" style="margin-bottom:8px;">维修结果</div>
@@ -1291,8 +1308,14 @@ function screen_register(){
       ${FAULT_TYPES.map(t=>`<div class="type-item" data-type="${t}" onclick="selectFaultType('register','${t}')"><div class="ic">${typeIcon(t)}</div><span>${t}</span></div>`).join('')}
     </div>
     <div style="height:16px;"></div>
-    <div class="field-label">报修地址 <span class="req">*</span></div>
-    <input type="text" id="reg-address" value="${esc(currentUser.dorm_building)} ">
+    <div class="field-label">寝室楼 <span class="req">*</span></div>
+    <select id="reg-building" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;background:#fff;color:var(--text);">
+      <option value="">请选择寝室楼</option>
+      ${DORM_BUILDINGS.map(b=>`<option value="${b}" ${b===currentUser.dorm_building?'selected':''}>${b}</option>`).join('')}
+    </select>
+    <div style="height:10px;"></div>
+    <div class="field-label">寝室门牌号 <span class="req">*</span></div>
+    <input type="text" id="reg-room" placeholder="如 301室">
     <div style="height:14px;"></div>
     <div class="field-label">故障描述 <span class="req">*</span></div>
     <textarea id="reg-desc" placeholder="详细描述故障情况…"></textarea>
@@ -1310,10 +1333,12 @@ function handleDormRegister(){
   const name = document.getElementById('reg-name').value.trim();
   const contact = document.getElementById('reg-contact').value.trim();
   const faultType = getSelectedType('register');
-  const address = document.getElementById('reg-address').value.trim();
+  const regBuilding = document.getElementById('reg-building')?.value;
+  const regRoom     = document.getElementById('reg-room')?.value.trim();
+  const address     = regBuilding && regRoom ? `${regBuilding} ${regRoom}` : (regBuilding||regRoom||'');
   const desc = document.getElementById('reg-desc').value.trim();
   const company = document.getElementById('reg-company-switch').classList.contains('on');
-  if(!name || !faultType || !address || !desc){ showToast('请完整填写信息'); return; }
+  if(!name || !faultType || !regBuilding || !regRoom || !desc){ showToast('请完整填写信息'); return; }
   const order = {
     order_id:'JD'+Date.now(), user_id:currentUser.user_id, fault_type:faultType,
     description:`【宿管代登记·${name}${contact?'·'+contact:''}】${desc}`,
@@ -1336,7 +1361,7 @@ function screen_tasks(){
   const skill = getRepairmanSkill(currentUser.user_id);
   return `<div class="screen-scroll">
     <div class="home-header">
-      <div class="greet">${esc(currentUser.name)}，你好 🔧</div>
+      <div class="greet">${esc(currentUser.name)}，你好</div>
       <div class="dorm-chip">${ICON.wrench_fill.replace('width="18" height="18"','width="13" height="13"')}技能：${esc(skill?.skill_tag||'—')} · 当前负载 ${skill?.workload||0} 条</div>
     </div>
     <div class="section">
@@ -1507,7 +1532,7 @@ function openAssignModal(orderId, faultType){
   showModal({
     title: `派单 · ${orderId}（${faultType}）`,
     bodyHtml: `<div style="text-align:left;max-height:340px;overflow-y:auto;margin-top:6px;">
-      <div style="font-size:12px;font-weight:700;color:var(--text-tertiary);margin-bottom:8px;">🤖 匹配推荐（按负载排序）</div>
+      <div style="font-size:12px;font-weight:700;color:var(--text-tertiary);margin-bottom:8px;">匹配推荐（按技能与负载排序）</div>
       ${html || emptyState('暂无匹配技能的维修人员')}
     </div>`,
     onOk: null, hideCancel:false, cancelText:'取消', wide:true,
