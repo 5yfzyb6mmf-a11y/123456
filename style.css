@@ -2,12 +2,12 @@
    CSS Variables & Reset
    ============================================================ */
 :root {
-  --primary:        #4263EB;
-  --primary-dark:   #3451C7;
-  --primary-light:  #EEF2FF;
-  --sidebar-bg:     #1A2234;
-  --sidebar-hover:  #243048;
-  --sidebar-active: #4263EB;
+  --primary:        #1A4F9C;
+  --primary-dark:   #123E7D;
+  --primary-light:  #E8EEF8;
+  --sidebar-bg:     #0D2458;
+  --sidebar-hover:  #163070;
+  --sidebar-active: #1A4F9C;
   --sidebar-text:   #94A3B8;
   --bg:             #F1F5F9;
   --card:           #FFFFFF;
@@ -88,7 +88,10 @@ label { display: block; font-weight: 500; margin-bottom: .3rem; font-size: .9rem
    ============================================================ */
 #login-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #1A2234 0%, #3451C7 100%);
+  background:
+    linear-gradient(135deg, rgba(13,36,88,.88) 0%, rgba(26,79,156,.80) 100%),
+    url('https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Jilin_University_Main_Building.jpg/1280px-Jilin_University_Main_Building.jpg')
+    center/cover no-repeat;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -387,21 +390,33 @@ tbody tr:hover { background: #F8FAFF; }
 .login-logo {
   text-align: center;
   margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .5rem;
 }
-.login-logo-icon {
-  font-size: 2.5rem;
-  display: block;
-  margin-bottom: .5rem;
+.login-logo-img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
 }
-.login-logo h1 {
-  font-size: 1.2rem;
-  font-weight: 700;
+.login-logo-text { text-align: center; }
+.login-school-name {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--primary);
+  letter-spacing: .1em;
+}
+.login-system-name {
+  font-size: .95rem;
+  font-weight: 600;
   color: var(--text);
+  margin-top: .1rem;
 }
-.login-logo p {
-  font-size: .8rem;
+.login-subtitle {
+  font-size: .75rem;
   color: var(--text-muted);
-  margin-top: .2rem;
+  margin-top: .1rem;
 }
 .role-cards {
   display: grid;
@@ -419,7 +434,18 @@ tbody tr:hover { background: #F8FAFF; }
 }
 .role-card:hover { border-color: var(--primary); background: var(--primary-light); }
 .role-card.selected { border-color: var(--primary); background: var(--primary-light); }
-.role-card .role-icon { font-size: 1.6rem; display: block; margin-bottom: .35rem; }
+.role-card .role-abbr {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: var(--primary-light);
+  color: var(--primary);
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0 auto .4rem;
+}
 .role-card .role-name { font-size: .85rem; font-weight: 600; color: var(--text); }
 .role-card .role-desc { font-size: .72rem; color: var(--text-muted); margin-top: .15rem; }
 .user-select-area { margin-bottom: 1rem; }

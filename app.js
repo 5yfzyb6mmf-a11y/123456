@@ -1,136 +1,63 @@
 /* ============================================================
-   SUPABASE 配置 — 填入你自己的 URL 和 Key
+   API 配置 — Flask 本地后端
    ============================================================ */
-const SUPABASE_URL = 'https://zuirzfpqkwjcyktmvsuz.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1aXJ6ZnBxa3dqY3lrdG12c3V6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0MDI5ODgsImV4cCI6MjA5Nzk3ODk4OH0.QuAHlZUReQpEFcIKEXgepJ3LixuW1NjYKTiDJnBqDDg'; // 替换：anon public key
+const API_BASE = 'http://localhost:5001';
 
-// 每张表的主键字段名
 const TABLE_PK = {
   user_info: 'user_id', repair_order: 'order_id', repairman_skill: 'repairman_id',
   assign_record: 'assign_id', repair_feedback: 'feedback_id', material_usage: 'record_id',
   notice: 'notice_id', complaint: 'complaint_id', message_push: 'push_id',
   sys_config: 'config_id', sys_log: 'log_id'
 };
-
 const ALL_TABLES = Object.keys(TABLE_PK);
 
 /* ============================================================
-   SYNC MODULE — Supabase 实时同步层
+   SYNC MODULE — Flask + MySQL
    ============================================================ */
 const SYNC = {
-  client: null,
   enabled: false,
-  _realtimeChannel: null,
 
   async init() {
-    if (SUPABASE_URL === 'YOUR_SUPABASE_URL') {
-      console.warn('⚠️ 未配置 Supabase，以单机离线模式运行');
-      showSyncStatus('offline');
-      return;
-    }
     try {
-      const { createClient } = supabase;
-      this.client  = createClient(SUPABASE_URL, SUPABASE_KEY);
-      this.enabled = true;
-      showSyncStatus('connecting');
-      await this.pullAll();
-      this.subscribeRealtime();
-      showSyncStatus('online');
+      const res = await fetch(`${API_BASE}/api/ping`, { signal: AbortSignal.timeout(3000) });
+      const data = await res.json();
+      if (data.ok) { this.enabled = true; await this.pullAll(); }
     } catch(e) {
-      console.warn('Supabase 连接失败，降级为离线模式', e);
-      showSyncStatus('offline');
+      console.warn('Flask 未启动，以 localStorage 离线模式运行');
     }
   },
 
-  // 从 Supabase 拉取所有表，云端有数据则覆盖本地
   async pullAll() {
     if (!this.enabled) return;
     for (const table of ALL_TABLES) {
       try {
-        const { data, error } = await this.client.from(table).select('*');
-        if (error || !data) continue;
-        if (data.length > 0) DB._d[table] = data;
-      } catch(e) { /* 单表失败不影响其他表 */ }
+        const res  = await fetch(`${API_BASE}/api/${table}`);
+        const rows = await res.json();
+        if (Array.isArray(rows) && rows.length > 0) DB._d[table] = rows;
+      } catch(e) {}
     }
     DB.save();
   },
 
-  // 写操作同步到 Supabase
   async push(table, operation, row, id) {
     if (!this.enabled) return;
-    const pk = TABLE_PK[table];
     try {
-      if (operation === 'insert' || operation === 'upsert') {
-        await this.client.from(table).upsert(row);
+      if (operation === 'insert') {
+        await fetch(`${API_BASE}/api/${table}`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(row)
+        });
       } else if (operation === 'update') {
-        await this.client.from(table).update(row).eq(pk, id);
+        await fetch(`${API_BASE}/api/${table}/${id}`, {
+          method: 'PUT', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(row)
+        });
       } else if (operation === 'delete') {
-        await this.client.from(table).delete().eq(pk, id);
+        await fetch(`${API_BASE}/api/${table}/${id}`, { method: 'DELETE' });
       }
-    } catch(e) {
-      console.warn(`Sync push [${table}] 失败:`, e);
-    }
-  },
-
-  // 实时监听所有表变化 → 自动刷新当前页
-  subscribeRealtime() {
-    if (!this.enabled) return;
-    this._realtimeChannel = this.client
-      .channel('public-all-changes')
-      .on('postgres_changes', { event: '*', schema: 'public' }, async () => {
-        await this._refreshPage();
-      })
-      .subscribe((status) => {
-        if (status === 'SUBSCRIBED') showSyncStatus('online');
-      });
-
-    // 轮询兜底：每 5 秒拉一次，确保 Realtime 未配置时也能同步
-    setInterval(async () => {
-      if (!this.enabled || !currentUser) return;
-      await this.pullAll();
-      this._refreshPage();
-    }, 5000);
-  },
-
-  async _refreshPage() {
-    await this.pullAll();
-    if (!currentUser || !currentPage) return;
-    // 表单页面不自动刷新，避免打断用户输入
-    const FORM_PAGES = [
-      'student-submit', 'student-evaluate', 'student-complaint',
-      'dorm-register', 'repairman-record', 'repairman-schedule',
-      'admin-notice'
-    ];
-    if (FORM_PAGES.includes(currentPage)) return;
-    destroyCharts();
-    const mc = document.getElementById('main-content');
-    mc.innerHTML = renderPage(currentPage, pageParams);
-    attachPageEvents(currentPage);
-    updateMsgBadge();
+    } catch(e) { console.warn(`push [${table}] 失败`, e); }
   }
 };
-
-// 顶部连接状态指示器
-function showSyncStatus(status) {
-  let el = document.getElementById('sync-status');
-  if (!el) {
-    el = document.createElement('div');
-    el.id = 'sync-status';
-    el.style.cssText = 'position:fixed;bottom:1.5rem;left:1.5rem;padding:.35rem .8rem;' +
-      'border-radius:999px;font-size:.75rem;font-weight:600;z-index:9999;' +
-      'display:flex;align-items:center;gap:.4rem;box-shadow:0 2px 8px rgba(0,0,0,.15)';
-    document.body.appendChild(el);
-  }
-  const cfg = {
-    online:      { bg:'#DCFCE7', color:'#166534', dot:'#22C55E', text:'☁️ 云端已连接' },
-    offline:     { bg:'#F1F5F9', color:'#64748B', dot:'#94A3B8', text:'💾 离线模式'   },
-    connecting:  { bg:'#FEF9C3', color:'#854D0E', dot:'#F59E0B', text:'⏳ 正在连接…'  },
-  };
-  const c = cfg[status] || cfg.offline;
-  el.style.background = c.bg;
-  el.style.color       = c.color;
-  el.innerHTML = `<span style="width:8px;height:8px;border-radius:50%;background:${c.dot};display:inline-block"></span>${c.text}`;
-}
 
 /* ============================================================
    DB MODULE
@@ -199,18 +126,19 @@ function createSeedData() {
   const now = Date.now();
   return {
     user_info: [
-      { user_id: 'U001', name: '韩房佳茵', role: 'student',    contact: '13800138001', dorm_building: '知新楼', password: '123456' },
-      { user_id: 'U002', name: '李明阳',   role: 'student',    contact: '13800138002', dorm_building: '励学楼', password: '123456' },
-      { user_id: 'U003', name: '王璐曜',   role: 'dorm_admin', contact: '13800138003', dorm_building: '知新楼', password: '123456' },
-      { user_id: 'U004', name: '周天临',   role: 'repairman',  contact: '13800138004', dorm_building: '',       password: '123456' },
-      { user_id: 'U005', name: '张国强',   role: 'repairman',  contact: '13800138005', dorm_building: '',       password: '123456' },
-      { user_id: 'U006', name: '刘明泽',   role: 'repairman',  contact: '13800138006', dorm_building: '',       password: '123456' },
-      { user_id: 'U007', name: '余锐新',   role: 'admin',      contact: '13800138007', dorm_building: '',       password: '123456' },
+      { user_id: 'U001', name: '韩房佳茵', role: 'student',    contact: '13800138001', dorm_building: '南苑三公寓', password: '123456' },
+      { user_id: 'U002', name: '李明阳',   role: 'student',    contact: '13800138002', dorm_building: '文苑二公寓', password: '123456' },
+      { user_id: 'U008', name: '薛楚滢',   role: 'student',    contact: '13800138008', dorm_building: '南苑二公寓', password: '123456' },
+      { user_id: 'U003', name: '王璐曜',   role: 'dorm_admin', contact: '13800138003', dorm_building: '南苑三公寓', password: '123456' },
+      { user_id: 'U004', name: '周天临',   role: 'repairman',  contact: '13800138004', dorm_building: '',            password: '123456' },
+      { user_id: 'U005', name: '张国强',   role: 'repairman',  contact: '13800138005', dorm_building: '',            password: '123456' },
+      { user_id: 'U006', name: '刘明泽',   role: 'repairman',  contact: '13800138006', dorm_building: '',            password: '123456' },
+      { user_id: 'U007', name: '余锐新',   role: 'admin',      contact: '13800138007', dorm_building: '',            password: '123456' },
     ],
     repairman_skill: [
-      { repairman_id: 'U004', skill_tag: '水电', workload: 2, schedule: '周一至周五 08:00-17:00', avg_score: 4.6 },
-      { repairman_id: 'U005', skill_tag: '家具', workload: 1, schedule: '周一至周六 09:00-18:00', avg_score: 4.3 },
-      { repairman_id: 'U006', skill_tag: '空调', workload: 3, schedule: '周二至周日 08:00-16:00', avg_score: 4.8 },
+      { repairman_id: 'U004', skill_tag: '水电', workload: 2, schedule: '周一至周五 08:00-17:00', avg_score: 4.6, area: '南苑片区' },
+      { repairman_id: 'U005', skill_tag: '家具', workload: 1, schedule: '周一至周六 09:00-18:00', avg_score: 4.3, area: '文苑片区' },
+      { repairman_id: 'U006', skill_tag: '空调', workload: 3, schedule: '周二至周日 08:00-16:00', avg_score: 4.8, area: '北苑片区' },
     ],
     repair_order: [
       {
@@ -331,6 +259,9 @@ function defaultPage(role) {
 /* ============================================================
    ROUTER
    ============================================================ */
+const FORM_PAGES = ['student-submit','student-evaluate','student-complaint',
+  'dorm-register','repairman-record','repairman-schedule','admin-notice'];
+
 function navigate(pageId, params = {}) {
   currentPage  = pageId;
   pageParams   = params;
@@ -373,31 +304,31 @@ function renderPage(pageId, params) {
    ============================================================ */
 const NAV_ITEMS = {
   student: [
-    { id: 'student-submit',    icon: '📝', label: '提交工单' },
-    { id: 'student-orders',    icon: '📋', label: '我的工单' },
-    { id: 'student-complaint', icon: '💬', label: '投诉建议' },
-    { id: 'student-messages',  icon: '🔔', label: '消息通知' },
+    { id: 'student-submit',    label: '提交工单' },
+    { id: 'student-orders',    label: '我的工单' },
+    { id: 'student-complaint', label: '投诉建议' },
+    { id: 'student-messages',  label: '消息通知' },
   ],
   dorm_admin: [
-    { id: 'dorm-overview',  icon: '🏠', label: '楼栋总览' },
-    { id: 'dorm-register',  icon: '📝', label: '协助登记' },
-    { id: 'dorm-orders',    icon: '📋', label: '工单列表' },
-    { id: 'student-messages', icon: '🔔', label: '消息通知' },
+    { id: 'dorm-overview',    label: '楼栋总览' },
+    { id: 'dorm-register',    label: '协助登记' },
+    { id: 'dorm-orders',      label: '工单列表' },
+    { id: 'student-messages', label: '消息通知' },
   ],
   repairman: [
-    { id: 'repairman-tasks',    icon: '🔧', label: '待处理工单' },
-    { id: 'repairman-history',  icon: '📋', label: '我的记录' },
-    { id: 'repairman-schedule', icon: '📅', label: '排班管理' },
-    { id: 'student-messages',   icon: '🔔', label: '消息通知' },
+    { id: 'repairman-tasks',    label: '待处理工单' },
+    { id: 'repairman-history',  label: '我的记录' },
+    { id: 'repairman-schedule', label: '排班管理' },
+    { id: 'student-messages',   label: '消息通知' },
   ],
   admin: [
-    { id: 'admin-assign',        icon: '📌', label: '待派单工单' },
-    { id: 'admin-assign-records',icon: '📑', label: '派单记录' },
-    { id: 'admin-repairmen',     icon: '👷', label: '维修人员管理' },
-    { id: 'admin-dashboard',     icon: '📊', label: '数据统计看板' },
-    { id: 'admin-notice',        icon: '📢', label: '通知公告' },
-    { id: 'admin-complaint',     icon: '💬', label: '投诉处理' },
-    { id: 'admin-log',           icon: '🗒️', label: '系统日志' },
+    { id: 'admin-assign',         label: '待派单工单' },
+    { id: 'admin-assign-records', label: '派单记录' },
+    { id: 'admin-repairmen',      label: '维修人员管理' },
+    { id: 'admin-dashboard',      label: '数据统计' },
+    { id: 'admin-notice',         label: '通知公告' },
+    { id: 'admin-complaint',      label: '投诉处理' },
+    { id: 'admin-log',            label: '系统日志' },
   ]
 };
 
@@ -413,8 +344,7 @@ function renderSideNav() {
   const items = NAV_ITEMS[currentUser.role] || [];
   document.getElementById('side-nav').innerHTML = items.map(item => `
     <div class="nav-item ${currentPage === item.id ? 'active' : ''}"
-         data-page="${item.id}">
-      <i class="nav-icon">${item.icon}</i>${item.label}
+         data-page="${item.id}">${item.label}
     </div>`).join('');
 }
 
@@ -452,6 +382,18 @@ const STATUS_LABEL = {
   to_evaluate: '待评价', completed: '已完成', rejected: '已退回', cancelled: '已取消'
 };
 const FAULT_TYPES = ['水电','家具','网络','空调','门窗','卫浴','其他'];
+
+const DORM_BUILDINGS = [
+  '南苑一公寓','南苑二公寓','南苑三公寓','南苑四公寓',
+  '南苑五公寓A座','南苑五公寓B座','南苑五公寓C座',
+  '南苑六公寓','南苑七公寓','南苑八公寓','南苑九公寓',
+  '文苑一公寓','文苑二公寓','文苑三公寓','文苑四公寓',
+  '文苑五公寓','文苑六公寓','文苑七公寓','文苑八公寓','文苑九公寓',
+  '北苑一公寓','北苑二公寓',
+  '大学城二公寓','大学城三公寓',
+];
+
+const REPAIRMAN_AREAS = ['南苑片区','文苑片区','北苑片区','大学城片区'];
 
 function statusBadge(status) {
   return `<span class="badge badge-${status}">${STATUS_LABEL[status] || status}</span>`;
@@ -611,19 +553,24 @@ function renderLoginPage() {
   document.getElementById('login-page').innerHTML = `
     <div class="login-card">
       <div class="login-logo">
-        <span class="login-logo-icon">🏫</span>
-        <h1>吉林大学宿舍报修系统</h1>
-        <p>信息系统分析与设计 · 课程原型演示</p>
+        <img src="https://xcb.jlu.edu.cn/images/jlu-logo.png"
+             onerror="this.style.display='none'"
+             class="login-logo-img" alt="吉林大学校徽" />
+        <div class="login-logo-text">
+          <div class="login-school-name">吉林大学</div>
+          <div class="login-system-name">宿舍报修管理系统</div>
+        </div>
+        <p class="login-subtitle">信息系统分析与设计 · 课程原型演示</p>
       </div>
       <div class="role-cards" id="role-cards">
         ${[
-          {role:'student',    icon:'👨‍🎓', name:'学生', desc:'提交工单 / 查看进度'},
-          {role:'dorm_admin', icon:'🏠',   name:'宿舍管理员', desc:'楼栋总览 / 协助登记'},
-          {role:'repairman',  icon:'🔧',   name:'维修人员', desc:'接单 / 填写记录'},
-          {role:'admin',      icon:'⚙️',   name:'系统管理员', desc:'派单 / 统计 / 配置'},
+          {role:'student',    abbr:'学', name:'学生', desc:'提交工单 · 查看进度'},
+          {role:'dorm_admin', abbr:'管', name:'宿舍管理员', desc:'楼栋总览 · 协助登记'},
+          {role:'repairman',  abbr:'修', name:'维修人员', desc:'接单 · 填写记录'},
+          {role:'admin',      abbr:'管', name:'系统管理员', desc:'派单 · 统计 · 配置'},
         ].map(r => `
           <div class="role-card" data-role="${r.role}">
-            <span class="role-icon">${r.icon}</span>
+            <span class="role-abbr">${r.abbr}</span>
             <div class="role-name">${r.name}</div>
             <div class="role-desc">${r.desc}</div>
           </div>`).join('')}
@@ -655,7 +602,7 @@ function renderLoginPage() {
 function renderStudentSubmit() {
   const u = currentUser;
   return `
-    <div class="page-title">📝 提交报修工单</div>
+    <div class="page-title">提交报修工单</div>
     <div class="card">
       <div class="card-header"><span class="card-title">报修申请表</span><span class="text-muted text-sm">对应用例 UC-01</span></div>
       <div class="form-grid">
@@ -667,8 +614,15 @@ function renderStudentSubmit() {
           </select>
         </div>
         <div class="form-group">
-          <label>报修地址 <span style="color:var(--danger)">*</span></label>
-          <input id="f-address" type="text" placeholder="楼号+房间号，如知新楼 301室" value="${u.dorm_building ? u.dorm_building + ' ' : ''}" />
+          <label>寝室楼 <span style="color:var(--danger)">*</span></label>
+          <select id="f-building">
+            <option value="">请选择寝室楼</option>
+            ${DORM_BUILDINGS.map(b => `<option value="${b}" ${b===u.dorm_building?'selected':''}>${b}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>寝室门牌号 <span style="color:var(--danger)">*</span></label>
+          <input id="f-room" type="text" placeholder="如 301室、402" />
         </div>
         <div class="form-group" style="grid-column:1/-1">
           <label>故障描述 <span style="color:var(--danger)">*</span></label>
@@ -731,7 +685,7 @@ function renderStudentOrders(filter = 'all', highlightId = null) {
     </tr>`).join('') : `<tr><td colspan="6">${emptyState('暂无工单，快去提交第一条报修吧！')}</td></tr>`;
 
   return `
-    <div class="page-title">📋 我的工单</div>
+    <div class="page-title">我的工单</div>
     <div class="card">
       <div class="filter-bar">
         ${tabs.map(t => `<span class="filter-tab ${filter===t.key?'active':''}" data-filter="${t.key}">${t.label}</span>`).join('')}
@@ -804,7 +758,7 @@ function renderStudentOrderDetail(orderId) {
             <div class="info-item"><span class="info-label">姓名</span><span class="info-value">${repairman.name}</span></div>
             <div class="info-item"><span class="info-label">联系方式</span><span class="info-value">${maskPhone(repairman.contact)}</span></div>
             <div class="info-item"><span class="info-label">技能专长</span><span class="info-value">${getRepairmanSkill(repairman.user_id)?.skill_tag || '—'}</span></div>
-            <div class="info-item"><span class="info-label">派单方式</span><span class="info-value">${assign.is_auto ? '🤖 智能推荐' : '👤 人工指定'}</span></div>
+            <div class="info-item"><span class="info-label">派单方式</span><span class="info-value">${assign.is_auto ? '智能推荐' : '人工指定'}</span></div>
           </div>
         </div>` : ''}
         ${order.repair_result ? `
@@ -831,7 +785,7 @@ function renderStudentOrderDetail(orderId) {
           <div class="timeline">${tlHtml}</div>
         </div>
         <div style="display:flex;flex-direction:column;gap:.5rem">
-          ${canEval ? `<button class="btn btn-primary" data-action="go-evaluate" data-order-id="${orderId}">⭐ 去评价</button>` : ''}
+          ${canEval ? `<button class="btn btn-primary" data-action="go-evaluate" data-order-id="${orderId}">去评价</button>` : ''}
           ${canCancel ? `<button class="btn btn-danger" data-action="cancel-order" data-order-id="${orderId}">取消工单</button>` : ''}
           <button class="btn btn-ghost" onclick="navigate('student-orders')">返回列表</button>
         </div>
@@ -846,7 +800,7 @@ function renderStudentEvaluate(orderId) {
   const order = DB.get('repair_order').find(o => o.order_id === orderId);
   if (!order) return emptyState('工单不存在');
   return `
-    <div class="page-title">⭐ 评价维修服务</div>
+    <div class="page-title">评价维修服务</div>
     <div class="card" style="max-width:560px">
       <div class="card-header">
         <div><div class="card-title">服务评价</div><div class="card-subtitle">工单 ${orderId} · ${order.fault_type} · ${order.address}</div></div>
@@ -880,7 +834,7 @@ function renderStudentComplaint() {
   const myOrders = DB.get('repair_order')
     .filter(o => o.user_id === currentUser.user_id && o.status !== 'cancelled');
   return `
-    <div class="page-title">💬 投诉建议</div>
+    <div class="page-title">投诉建议</div>
     <div class="card" style="max-width:560px">
       <div class="card-header"><span class="card-title">提交投诉/建议</span></div>
       <div class="form-group">
@@ -934,10 +888,10 @@ function renderStudentMessages() {
     .filter(m => m.user_id === currentUser.user_id)
     .sort((a,b) => b.push_time - a.push_time);
 
-  if (!msgs.length) return `<div class="page-title">🔔 消息通知</div><div class="card">${emptyState('暂无消息')}</div>`;
+  if (!msgs.length) return `<div class="page-title">消息通知</div><div class="card">${emptyState('暂无消息')}</div>`;
 
   return `
-    <div class="page-title">🔔 消息通知</div>
+    <div class="page-title">消息通知</div>
     <div class="card">
       <div style="display:flex;justify-content:flex-end;margin-bottom:.75rem">
         <button class="btn btn-ghost btn-sm" id="btn-mark-all-read">全部标为已读</button>
@@ -968,7 +922,7 @@ function renderDormOverview() {
   const topFault = Object.entries(byFault).sort((a,b)=>b[1]-a[1]).slice(0,3);
 
   return `
-    <div class="page-title">🏠 ${building} 楼栋总览</div>
+    <div class="page-title">${building} 楼栋总览</div>
     <div class="stat-grid">
       <div class="stat-card"><div class="stat-label">报修总量</div><div class="stat-value" style="color:var(--primary)">${all.length}</div></div>
       <div class="stat-card"><div class="stat-label">待派单</div><div class="stat-value" style="color:var(--text-muted)">${byStatus.pending||0}</div></div>
@@ -991,7 +945,7 @@ function renderDormOverview() {
    ============================================================ */
 function renderDormRegister() {
   return `
-    <div class="page-title">📝 协助登记工单</div>
+    <div class="page-title">协助登记工单</div>
     <div class="card" style="max-width:640px">
       <div class="card-header"><span class="card-title">代学生登记报修</span><span class="text-muted text-sm">对应线下登记职能</span></div>
       <div class="form-row">
@@ -1013,8 +967,15 @@ function renderDormRegister() {
           </select>
         </div>
         <div class="form-group">
-          <label>报修地址 <span style="color:var(--danger)">*</span></label>
-          <input id="dr-address" type="text" placeholder="楼号+房间号" value="${currentUser.dorm_building} " />
+          <label>寝室楼 <span style="color:var(--danger)">*</span></label>
+          <select id="dr-building">
+            <option value="">请选择寝室楼</option>
+            ${DORM_BUILDINGS.map(b=>`<option value="${b}" ${b===currentUser.dorm_building?'selected':''}>${b}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>寝室门牌号 <span style="color:var(--danger)">*</span></label>
+          <input id="dr-room" type="text" placeholder="如 301室" />
         </div>
       </div>
       <div class="form-group">
@@ -1061,7 +1022,7 @@ function renderDormOrders() {
     .join('') : `<tr><td colspan="6">${emptyState()}</td></tr>`;
 
   return `
-    <div class="page-title">📋 ${building} 工单列表</div>
+    <div class="page-title">${building} 工单列表</div>
     <div class="card">
       <div class="table-wrap">
         <table>
@@ -1103,14 +1064,14 @@ function renderRepairmanTasks() {
       </div>
       <div style="display:flex;gap:.5rem">
         ${isRepairing
-          ? `<button class="btn btn-success" onclick="navigate('repairman-record',{orderId:'${o.order_id}'})">📋 填写完工记录</button>`
-          : `<button class="btn btn-primary" data-action="accept-order" data-order-id="${o.order_id}">✅ 接单确认</button>`
+          ? `<button class="btn btn-success" onclick="navigate('repairman-record',{orderId:'${o.order_id}'})">填写完工记录</button>`
+          : `<button class="btn btn-primary" data-action="accept-order" data-order-id="${o.order_id}">接单确认</button>`
         }
       </div>
     </div>`;
   }).join('') : `<div class="card">${emptyState('暂无待处理工单，休息一下吧 ☕')}</div>`;
 
-  return `<div class="page-title">🔧 待处理工单</div>${cards}`;
+  return `<div class="page-title">待处理工单</div>${cards}`;
 }
 
 /* ============================================================
@@ -1121,7 +1082,7 @@ function renderRepairmanRecord(orderId) {
   if (!order) return emptyState('工单不存在');
 
   return `
-    <div class="page-title">📋 填写维修记录</div>
+    <div class="page-title">填写维修记录</div>
     <div class="card" style="max-width:640px">
       <div class="card-header">
         <div><div class="card-title">${order.fault_type} · ${order.address}</div>
@@ -1154,8 +1115,8 @@ function renderRepairmanRecord(orderId) {
       <div id="rr-error" class="form-error"></div>
       <div style="display:flex;gap:.5rem;margin-top:1rem;justify-content:flex-end">
         <button class="btn btn-ghost" onclick="history.back()">返回</button>
-        <button class="btn btn-warning" id="btn-rr-reject" data-order-id="${orderId}">⚠ 标记无法维修</button>
-        <button class="btn btn-success" id="btn-rr-complete" data-order-id="${orderId}">✅ 提交完工</button>
+        <button class="btn btn-warning" id="btn-rr-reject" data-order-id="${orderId}">标记无法维修</button>
+        <button class="btn btn-success" id="btn-rr-complete" data-order-id="${orderId}">提交完工</button>
       </div>
     </div>`;
 }
@@ -1180,7 +1141,7 @@ function renderRepairmanHistory() {
     </tr>`).join('') : `<tr><td colspan="6">${emptyState('暂无历史记录')}</td></tr>`;
 
   return `
-    <div class="page-title">📋 我的维修记录</div>
+    <div class="page-title">我的维修记录</div>
     <div class="card">
       <div class="table-wrap">
         <table>
@@ -1195,15 +1156,21 @@ function renderRepairmanHistory() {
    REPAIRMAN — SCHEDULE
    ============================================================ */
 function renderRepairmanSchedule() {
-  const skill = getRepairmanSkill(currentUser.user_id) || { skill_tag:'', workload:0, schedule:'' };
+  const skill = getRepairmanSkill(currentUser.user_id) || { skill_tag:'', workload:0, schedule:'', area:'' };
   return `
-    <div class="page-title">📅 排班与技能管理</div>
+    <div class="page-title">排班与技能管理</div>
     <div class="card" style="max-width:480px">
       <div class="card-header"><span class="card-title">我的技能与排班</span></div>
       <div class="form-group">
         <label>技能专长</label>
         <select id="sch-skill">
           ${FAULT_TYPES.filter(t=>t!=='其他').map(t=>`<option ${skill.skill_tag===t?'selected':''}>${t}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>负责片区</label>
+        <select id="sch-area">
+          ${REPAIRMAN_AREAS.map(a=>`<option value="${a}" ${skill.area===a?'selected':''}>${a}</option>`).join('')}
         </select>
       </div>
       <div class="form-group">
@@ -1240,7 +1207,7 @@ function renderAdminAssign() {
     </tr>`).join('') : `<tr><td colspan="7">${emptyState('暂无待派单工单 🎉')}</td></tr>`;
 
   return `
-    <div class="page-title">📌 待派单工单</div>
+    <div class="page-title">待派单工单</div>
     <div class="card">
       <div class="table-wrap">
         <table>
@@ -1266,14 +1233,14 @@ function renderAdminAssignRecords() {
       <td><code style="font-size:.8rem">${r.order_id}</code></td>
       <td>${order ? order.fault_type : '—'}</td>
       <td>${repairman ? repairman.name : r.repairman_id}</td>
-      <td>${r.is_auto ? '🤖 智能' : '👤 人工'}</td>
+      <td>${r.is_auto ? '智能' : '人工'}</td>
       <td class="text-muted">${fmtTime(r.assign_time)}</td>
       <td>${order ? statusBadge(order.status) : '—'}</td>
     </tr>`;
   }).join('') : `<tr><td colspan="7">${emptyState()}</td></tr>`;
 
   return `
-    <div class="page-title">📑 派单记录</div>
+    <div class="page-title">派单记录</div>
     <div class="card">
       <div class="table-wrap">
         <table>
@@ -1297,6 +1264,7 @@ function renderAdminRepairmen() {
     return `<tr>
       <td>${u ? u.name : s.repairman_id}</td>
       <td><span class="candidate-tag">${s.skill_tag}</span></td>
+      <td><span class="candidate-tag" style="background:var(--info-light);color:var(--info)">${s.area || '未分配'}</span></td>
       <td>
         <div class="score-bar-wrap">
           <div class="score-bar" style="width:80px"><div class="score-bar-fill" style="width:${s.workload/5*100}%;background:var(--primary)"></div></div>
@@ -1315,11 +1283,11 @@ function renderAdminRepairmen() {
   });
 
   return `
-    <div class="page-title">👷 维修人员管理</div>
+    <div class="page-title">维修人员管理</div>
     <div class="card">
       <div class="table-wrap">
         <table>
-          <thead><tr><th>姓名</th><th>技能标签</th><th>当前负载</th><th>排班</th><th>综合评分</th><th>操作</th></tr></thead>
+          <thead><tr><th>姓名</th><th>技能</th><th>负责片区</th><th>当前负载</th><th>排班</th><th>综合评分</th><th>操作</th></tr></thead>
           <tbody>${rows.join('')}</tbody>
         </table>
       </div>
@@ -1358,7 +1326,7 @@ function renderAdminDashboard() {
   }).sort((a,b) => b.score - a.score);
 
   return `
-    <div class="page-title">📊 数据统计看板</div>
+    <div class="page-title">数据统计看板</div>
     <div class="stat-grid">
       <div class="stat-card"><div class="stat-label">报修总量</div><div class="stat-value" style="color:var(--primary)">${orders.length}</div></div>
       <div class="stat-card"><div class="stat-label">已完成</div><div class="stat-value" style="color:var(--success)">${orders.filter(o=>o.status==='completed').length}</div></div>
@@ -1409,7 +1377,7 @@ function renderAdminNotice() {
   const roleLabels = { all:'全体', student:'学生', dorm_admin:'宿管', repairman:'维修', admin:'管理员' };
 
   return `
-    <div class="page-title">📢 通知公告管理</div>
+    <div class="page-title">通知公告管理</div>
     <div class="card" style="margin-bottom:1rem">
       <div class="card-header"><span class="card-title">发布新公告</span></div>
       <div class="form-group"><label>标题 <span style="color:var(--danger)">*</span></label><input id="nt-title" type="text" placeholder="公告标题" /></div>
@@ -1471,7 +1439,7 @@ function renderAdminComplaint() {
     </tr>`).join('') : `<tr><td colspan="7">${emptyState()}</td></tr>`;
 
   return `
-    <div class="page-title">💬 投诉处理</div>
+    <div class="page-title">投诉处理</div>
     <div class="card">
       <div class="table-wrap">
         <table>
@@ -1498,7 +1466,7 @@ function renderAdminLog() {
     </tr>`).join('') : `<tr><td colspan="5">${emptyState()}</td></tr>`;
 
   return `
-    <div class="page-title">🗒️ 系统操作日志</div>
+    <div class="page-title">系统操作日志</div>
     <div class="card">
       <div class="table-wrap">
         <table>
@@ -1521,7 +1489,7 @@ function openAssignModal(orderId, faultType) {
       <div>
         <span style="font-weight:600">${c.name}</span>
         <span class="candidate-tag" style="margin-left:.4rem">${c.skill_tag}</span>
-        ${i===0 ? '<span style="font-size:.72rem;color:var(--primary);font-weight:600;margin-left:.3rem">🤖 智能推荐</span>' : ''}
+        ${i===0 ? '<span style="font-size:.72rem;color:var(--primary);font-weight:600;margin-left:.3rem">智能推荐</span>' : ''}
         <div class="workload-indicator" style="margin-top:.2rem">
           当前负载：${c.workload} 条 · 排班：${c.schedule||'—'}
         </div>
@@ -1547,7 +1515,7 @@ function openAssignModal(orderId, faultType) {
 
   showModal(`派单 · 工单 ${orderId}（${faultType}）`,
     `<div style="margin-bottom:.75rem">
-      <div style="font-size:.8rem;font-weight:700;color:var(--text-muted);margin-bottom:.4rem">🤖 匹配推荐（按负载排序）</div>
+      <div style="font-size:.8rem;font-weight:700;color:var(--text-muted);margin-bottom:.4rem">匹配推荐（按技能与负载排序）</div>
       ${listHtml}
       ${allHtml.length ? `<div style="font-size:.8rem;font-weight:700;color:var(--text-muted);margin:1rem 0 .4rem">其他人员</div>${allHtml.join('')}` : ''}
     </div>`
@@ -1749,14 +1717,16 @@ function wireFormHandlers() {
 
 function handleSubmitOrder() {
   const faultType = document.getElementById('f-fault-type')?.value;
-  const address   = document.getElementById('f-address')?.value.trim();
+  const building  = document.getElementById('f-building')?.value;
+  const room      = document.getElementById('f-room')?.value.trim();
+  const address   = building && room ? `${building} ${room}` : (building || room || '');
   const desc      = document.getElementById('f-desc')?.value.trim();
   const appoint   = document.getElementById('f-appoint')?.value;
   const company   = document.getElementById('f-company')?.value === 'true';
   const imgUrl    = document.getElementById('img-preview')?.src || '';
 
   const err = document.getElementById('submit-error');
-  if (!faultType || !address || !desc) { err.textContent = '请完整填写信息（故障类型、地址、描述为必填项）'; return; }
+  if (!faultType || !building || !room || !desc) { err.textContent = '请完整填写信息（故障类型、寝室楼、门牌号、描述为必填项）'; return; }
   err.textContent = '';
 
   const order = {
@@ -1838,11 +1808,13 @@ function handleSubmitComplaint() {
 function handleDormRegister() {
   const studentName = document.getElementById('dr-student-name')?.value.trim();
   const faultType   = document.getElementById('dr-fault-type')?.value;
-  const address     = document.getElementById('dr-address')?.value.trim();
+  const building    = document.getElementById('dr-building')?.value;
+  const room        = document.getElementById('dr-room')?.value.trim();
+  const address     = building && room ? `${building} ${room}` : (building || room || '');
   const desc        = document.getElementById('dr-desc')?.value.trim();
   const company     = document.getElementById('dr-company')?.value === 'true';
   const err         = document.getElementById('dr-error');
-  if (!studentName || !faultType || !address || !desc) { err.textContent = '请完整填写信息'; return; }
+  if (!studentName || !faultType || !building || !room || !desc) { err.textContent = '请完整填写信息'; return; }
 
   const order = {
     order_id: 'JD' + Date.now(), user_id: currentUser.user_id,
@@ -1892,9 +1864,10 @@ function handleRepairComplete(orderId, isReject) {
 }
 
 function handleSaveSchedule() {
-  const skill = document.getElementById('sch-skill')?.value;
+  const skill    = document.getElementById('sch-skill')?.value;
+  const area     = document.getElementById('sch-area')?.value;
   const schedule = document.getElementById('sch-schedule')?.value.trim();
-  DB.update('repairman_skill', 'repairman_id', currentUser.user_id, { skill_tag: skill, schedule });
+  DB.update('repairman_skill', 'repairman_id', currentUser.user_id, { skill_tag: skill, area, schedule });
   showToast('排班信息已保存', 'success');
 }
 
@@ -1995,6 +1968,12 @@ function openEditRepairmanModal(uid) {
        </select>
      </div>
      <div class="form-group">
+       <label>负责片区</label>
+       <select id="edit-area">
+         ${REPAIRMAN_AREAS.map(a=>`<option value="${a}" ${skill.area===a?'selected':''}>${a}</option>`).join('')}
+       </select>
+     </div>
+     <div class="form-group">
        <label>排班时间</label>
        <input id="edit-schedule" type="text" value="${skill.schedule||''}" placeholder="如：周一至周五 08:00-17:00" />
      </div>`,
@@ -2006,7 +1985,8 @@ function openEditRepairmanModal(uid) {
     if (btn) btn.onclick = () => {
       DB.update('repairman_skill', 'repairman_id', uid, {
         skill_tag: document.getElementById('edit-skill').value,
-        schedule: document.getElementById('edit-schedule').value.trim()
+        area:      document.getElementById('edit-area').value,
+        schedule:  document.getElementById('edit-schedule').value.trim()
       });
       closeModal();
       showToast('已保存', 'success');
@@ -2074,8 +2054,6 @@ function openRoleSwitcher() {
    ============================================================ */
 function init() {
   DB.load();
-
-  // 启动 Supabase 同步（异步，不阻塞页面加载）
   SYNC.init();
 
   // Restore session
